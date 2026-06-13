@@ -1,0 +1,32 @@
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+sys.path.insert(0, str(SRC_DIR))
+
+from debate.models import create_model_clients
+from debate.pipeline import collect_role_preferences, generate_independent_solutions
+
+
+def main() -> None:
+    problem = {
+        "id": "demo_001",
+        "question": "What is 2 + 2?",
+        "correct_answer": "4",
+    }
+
+    models = create_model_clients()
+
+    role_preferences = collect_role_preferences(problem, models)
+    solutions = generate_independent_solutions(problem, models)
+
+    print("Role preferences:")
+    print(role_preferences)
+
+    print("\nIndependent solutions:")
+    print(solutions)
+
+
+if __name__ == "__main__":
+    main()
