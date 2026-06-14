@@ -44,6 +44,25 @@ class MockClient(ModelClient):
                 '"overall_assessment": "reasonable"}'
             )
 
+        if "refine your solution" in prompt_lower:
+            return (
+                '{"changes_made": ['
+                '{"critique": "The reasoning should show more verification.", '
+                '"response": "Added a verification step.", '
+                '"accepted": true}'
+                '], '
+                '"refined_solution": "The solution was checked and refined using peer feedback.", '
+                '"refined_answer": "4", '
+                '"confidence": 0.85}'
+            )
+
+        if "judge the final solutions" in prompt_lower:
+            return (
+                '{"winner": "solver_1", '
+                '"confidence": 0.8, '
+                '"reasoning": "Solver 1 provided the clearest refined answer."}'
+            )
+
         return "Mock response"
 
 

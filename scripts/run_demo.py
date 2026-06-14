@@ -11,6 +11,8 @@ from debate.pipeline import (
     collect_role_preferences,
     generate_independent_solutions,
     generate_peer_reviews,
+    judge_solutions,
+    refine_solutions,
 )
 
 
@@ -26,6 +28,15 @@ def main() -> None:
     roles = assign_roles(models, role_preferences)
     solutions = generate_independent_solutions(problem, models, roles)
     peer_reviews = generate_peer_reviews(problem, models, roles, solutions)
+    refined_solutions = refine_solutions(problem, models, roles, solutions, peer_reviews)
+    judgment = judge_solutions(
+        problem,
+        models,
+        roles,
+        solutions,
+        peer_reviews,
+        refined_solutions,
+    )
 
     print("Role preferences:")
     print(role_preferences)
@@ -38,6 +49,12 @@ def main() -> None:
 
     print("\nPeer reviews:")
     print(peer_reviews)
+
+    print("\nRefined solutions:")
+    print(refined_solutions)
+
+    print("\nFinal judgment:")
+    print(judgment)
 
 
 if __name__ == "__main__":

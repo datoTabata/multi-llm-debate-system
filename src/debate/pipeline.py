@@ -1,10 +1,13 @@
 import json
 
 from debate.prompts import (
+    build_judge_prompt,
     build_peer_review_prompt,
+    build_refinement_prompt,
     build_role_preference_prompt,
     build_solver_prompt,
 )
+
 
 def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
     """Collect role preferences from every model."""
@@ -82,3 +85,47 @@ def generate_peer_reviews(
             reviews[solution_id].append(review)
 
     return reviews
+
+
+def refine_solutions(
+    problem: dict,
+    models: dict,
+    roles: dict[str, str],
+    solutions: dict[str, str],
+    peer_reviews: dict[str, list[str]],
+) -> dict[str, str]:
+    """Refine solver solutions using peer reviews."""
+
+    refined_solutions = {}
+
+    for solver_id, original_solution in solutions.items():
+        model_name = roles[solver_id]
+        model = models[model_name]
+        reviews = peer_reviews[solver_id]
+        prompt = build_refinement_prompt(problem, original_solution, reviews)
+        refined_solutions[solver_id] = model.generate(prompt)
+
+    return refined_solutions
+
+
+def judge_solutions(
+    problem: dict,
+    models: dict,
+    roles: dict[str, str],
+    solutions: dict[str, str],
+    peer_reviews: dict[str, list[str]],
+    refined_solutions: dict[str, str],
+) -> str:
+    """Judge refined solutions and choose the best answer."""
+
+    judge_model_name = roles["judge"]
+    judge_model = models[judge_model_name]
+
+    prompt = build_judge_prompt(
+        problem,
+        solutions,
+        peer_reviews,
+        refined_solutions,
+    )
+
+    return judge_model.generate(prompt)

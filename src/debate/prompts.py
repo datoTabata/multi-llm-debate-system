@@ -53,3 +53,59 @@ Return:
 - suggested changes
 - overall assessment
 """
+
+
+def build_refinement_prompt(problem: dict, original_solution: str, reviews: list[str]) -> str:
+    """Build a prompt for solution refinement."""
+
+    joined_reviews = "\n\n".join(reviews)
+
+    return f"""
+Refine your solution using the peer reviews.
+
+Problem:
+{problem["question"]}
+
+Original solution:
+{original_solution}
+
+Peer reviews:
+{joined_reviews}
+
+Return:
+- changes made
+- critiques accepted or rejected
+- refined solution
+- refined final answer
+- confidence
+"""
+
+
+def build_judge_prompt(
+    problem: dict,
+    solutions: dict[str, str],
+    peer_reviews: dict[str, list[str]],
+    refined_solutions: dict[str, str],
+) -> str:
+    """Build a prompt for final judgment."""
+
+    return f"""
+Judge the final solutions.
+
+Problem:
+{problem["question"]}
+
+Original solutions:
+{solutions}
+
+Peer reviews:
+{peer_reviews}
+
+Refined solutions:
+{refined_solutions}
+
+Return:
+- winner
+- confidence
+- reasoning
+"""
