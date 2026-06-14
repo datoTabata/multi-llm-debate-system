@@ -29,3 +29,27 @@ Return:
 - final answer
 - confidence
 """
+
+
+def build_peer_review_prompt(problem: dict, solution_id: str, solution: str) -> str:
+    """Build a prompt for peer review."""
+
+    return f"""
+Review the following solution.
+
+Problem:
+{problem["question"]}
+
+Solution ID:
+{solution_id}
+
+Solution:
+{solution}
+
+Return:
+- strengths
+- weaknesses
+- possible errors
+- suggested changes
+- overall assessment
+"""

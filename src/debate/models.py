@@ -35,6 +35,15 @@ class MockClient(ModelClient):
                 '"reasoning": "This model is better suited for solution generation."}'
             )
 
+        if "review the following solution" in prompt_lower:
+            return (
+                '{"strengths": ["The solution gives a clear final answer."], '
+                '"weaknesses": ["The reasoning should show more verification."], '
+                '"possible_errors": [], '
+                '"suggested_changes": ["Add a short check of the final answer."], '
+                '"overall_assessment": "reasonable"}'
+            )
+
         return "Mock response"
 
 

@@ -1,7 +1,10 @@
 import json
 
-from debate.prompts import build_role_preference_prompt, build_solver_prompt
-
+from debate.prompts import (
+    build_peer_review_prompt,
+    build_role_preference_prompt,
+    build_solver_prompt,
+)
 
 def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
     """Collect role preferences from every model."""
@@ -54,3 +57,28 @@ def assign_roles(models: dict, role_preferences: dict[str, str]) -> dict[str, st
         "solver_3": solver_models[2],
         "judge": judge_model,
     }
+
+
+def generate_peer_reviews(
+    problem: dict,
+    models: dict,
+    roles: dict[str, str],
+    solutions: dict[str, str],
+) -> dict[str, list[str]]:
+    """Generate peer reviews for each solver solution."""
+
+    reviews = {solver_id: [] for solver_id in solutions}
+
+    for reviewer_id in solutions:
+        reviewer_model_name = roles[reviewer_id]
+        reviewer_model = models[reviewer_model_name]
+
+        for solution_id, solution in solutions.items():
+            if reviewer_id == solution_id:
+                continue
+
+            prompt = build_peer_review_prompt(problem, solution_id, solution)
+            review = reviewer_model.generate(prompt)
+            reviews[solution_id].append(review)
+
+    return reviews
