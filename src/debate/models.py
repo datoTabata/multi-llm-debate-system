@@ -17,6 +17,24 @@ class MockClient(ModelClient):
     name: str
 
     def generate(self, prompt: str) -> str:
+        prompt_lower = prompt.lower()
+
+        if "solver or judge" in prompt_lower:
+            if self.name == "model_d":
+                return (
+                    '{"preferred_role": "Judge", '
+                    '"solver_confidence": 0.6, '
+                    '"judge_confidence": 0.9, '
+                    '"reasoning": "This model is better suited for evaluating competing solutions."}'
+                )
+
+            return (
+                '{"preferred_role": "Solver", '
+                '"solver_confidence": 0.8, '
+                '"judge_confidence": 0.6, '
+                '"reasoning": "This model is better suited for solution generation."}'
+            )
+
         return "Mock response"
 
 

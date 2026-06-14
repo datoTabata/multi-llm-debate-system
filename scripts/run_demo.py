@@ -6,7 +6,7 @@ SRC_DIR = PROJECT_ROOT / "src"
 sys.path.insert(0, str(SRC_DIR))
 
 from debate.models import create_model_clients
-from debate.pipeline import collect_role_preferences, generate_independent_solutions
+from debate.pipeline import assign_roles, collect_role_preferences, generate_independent_solutions
 
 
 def main() -> None:
@@ -17,12 +17,15 @@ def main() -> None:
     }
 
     models = create_model_clients()
-
     role_preferences = collect_role_preferences(problem, models)
-    solutions = generate_independent_solutions(problem, models)
+    roles = assign_roles(models, role_preferences)
+    solutions = generate_independent_solutions(problem, models, roles)
 
     print("Role preferences:")
     print(role_preferences)
+
+    print("\nAssigned roles:")
+    print(roles)
 
     print("\nIndependent solutions:")
     print(solutions)
