@@ -64,3 +64,34 @@ def calculate_accuracy(evaluations: list[dict]) -> float:
     correct_count = sum(1 for evaluation in evaluations if evaluation["is_correct"])
 
     return correct_count / len(evaluations)
+
+
+def get_solver_refined_answers(result: dict) -> dict[str, str]:
+    """Extract refined answers for all solvers in one result."""
+
+    answers = {}
+
+    for solver_id, refined_solution in result["refined_solutions"].items():
+        answers[solver_id] = extract_refined_answer(refined_solution)
+
+    return answers
+
+
+def has_consensus(result: dict) -> bool:
+    """Check whether all solvers produced the same refined answer."""
+
+    answers = get_solver_refined_answers(result)
+    unique_answers = set(answers.values())
+
+    return len(unique_answers) == 1
+
+
+def calculate_consensus_rate(results: list[dict]) -> float:
+    """Calculate the rate of full solver consensus."""
+
+    if not results:
+        return 0.0
+
+    consensus_count = sum(1 for result in results if has_consensus(result))
+
+    return consensus_count / len(results)

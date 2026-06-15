@@ -6,7 +6,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 sys.path.insert(0, str(SRC_DIR))
 
-from debate.evaluation import calculate_accuracy, evaluate_result
+from debate.evaluation import (
+    calculate_accuracy,
+    calculate_consensus_rate,
+    evaluate_result,
+)
 from debate.models import create_model_clients
 from debate.pipeline import run_debate_for_problem
 
@@ -35,6 +39,7 @@ def main() -> None:
         evaluations.append(evaluation)
 
     accuracy = calculate_accuracy(evaluations)
+    consensus_rate = calculate_consensus_rate(results)
 
     output_path = PROJECT_ROOT / "outputs" / "demo_result.json"
     output_path.parent.mkdir(exist_ok=True)
@@ -43,6 +48,7 @@ def main() -> None:
         "results": results,
         "evaluations": evaluations,
         "accuracy": accuracy,
+        "consensus_rate": consensus_rate,
     }
 
     with output_path.open("w", encoding="utf-8") as file:
@@ -51,6 +57,7 @@ def main() -> None:
     print(f"Saved result to {output_path}")
     print(f"Problems evaluated: {len(problems)}")
     print(f"Accuracy: {accuracy:.2f}")
+    print(f"Consensus rate: {consensus_rate:.2f}")
 
     print("\nEvaluations:")
     print(json.dumps(evaluations, indent=2))
