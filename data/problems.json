@@ -1,0 +1,26 @@
+[
+  {
+    "id": "math_001",
+    "category": "Mathematical/Logical Reasoning",
+    "question": "What is 2 + 2?",
+    "correct_answer": "4",
+    "explanation": "2 + 2 = 4.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "logic_001",
+    "category": "Logic Puzzles & Constraint Satisfaction",
+    "question": "A box contains twice as many red balls as blue balls. If there are 18 balls total, how many blue balls are there?",
+    "correct_answer": "6",
+    "explanation": "Let blue balls be x. Red balls are 2x, so x + 2x = 18 and x = 6.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "math_002",
+    "category": "Mathematical/Logical Reasoning",
+    "question": "In how many ways can you tile a 2x3 rectangle with 2x1 dominoes?",
+    "correct_answer": "3",
+    "explanation": "The number of domino tilings of a 2xn rectangle follows Fibonacci numbers. For n = 3, the answer is 3.",
+    "difficulty": "medium"
+  }
+]

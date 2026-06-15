@@ -129,3 +129,31 @@ def judge_solutions(
     )
 
     return judge_model.generate(prompt)
+
+
+def run_debate_for_problem(problem: dict, models: dict) -> dict:
+    """Run the full debate workflow for one problem."""
+
+    role_preferences = collect_role_preferences(problem, models)
+    roles = assign_roles(models, role_preferences)
+    solutions = generate_independent_solutions(problem, models, roles)
+    peer_reviews = generate_peer_reviews(problem, models, roles, solutions)
+    refined_solutions = refine_solutions(problem, models, roles, solutions, peer_reviews)
+    judgment = judge_solutions(
+        problem,
+        models,
+        roles,
+        solutions,
+        peer_reviews,
+        refined_solutions,
+    )
+
+    return {
+        "problem_id": problem["id"],
+        "role_preferences": role_preferences,
+        "roles": roles,
+        "solutions": solutions,
+        "peer_reviews": peer_reviews,
+        "refined_solutions": refined_solutions,
+        "judgment": judgment,
+    }
