@@ -53,3 +53,14 @@ def evaluate_result(result: dict, problem: dict) -> dict:
         "correct_answer": correct_answer,
         "is_correct": is_correct,
     }
+
+
+def calculate_accuracy(evaluations: list[dict]) -> float:
+    """Calculate accuracy from evaluation records."""
+
+    if not evaluations:
+        return 0.0
+
+    correct_count = sum(1 for evaluation in evaluations if evaluation["is_correct"])
+
+    return correct_count / len(evaluations)

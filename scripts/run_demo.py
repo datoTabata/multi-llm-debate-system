@@ -6,7 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 sys.path.insert(0, str(SRC_DIR))
 
-from debate.evaluation import evaluate_result
+from debate.evaluation import calculate_accuracy, evaluate_result
 from debate.models import create_model_clients
 from debate.pipeline import run_debate_for_problem
 
@@ -22,31 +22,38 @@ def load_problems() -> list[dict]:
 
 def main() -> None:
     problems = load_problems()
-    problem = problems[0]
-
     models = create_model_clients()
-    result = run_debate_for_problem(problem, models)
+
+    results = []
+    evaluations = []
+
+    for problem in problems:
+        result = run_debate_for_problem(problem, models)
+        evaluation = evaluate_result(result, problem)
+
+        results.append(result)
+        evaluations.append(evaluation)
+
+    accuracy = calculate_accuracy(evaluations)
 
     output_path = PROJECT_ROOT / "outputs" / "demo_result.json"
     output_path.parent.mkdir(exist_ok=True)
 
-    evaluation = evaluate_result(result, problem)
-
     output = {
-        "result": result,
-        "evaluation": evaluation,
+        "results": results,
+        "evaluations": evaluations,
+        "accuracy": accuracy,
     }
 
     with output_path.open("w", encoding="utf-8") as file:
         json.dump(output, file, indent=2)
 
     print(f"Saved result to {output_path}")
+    print(f"Problems evaluated: {len(problems)}")
+    print(f"Accuracy: {accuracy:.2f}")
 
-    print("Debate result:")
-    print(json.dumps(result, indent=2))
-
-    print("\nEvaluation:")
-    print(json.dumps(evaluation, indent=2))
+    print("\nEvaluations:")
+    print(json.dumps(evaluations, indent=2))
 
 
 if __name__ == "__main__":
