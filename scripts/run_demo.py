@@ -6,6 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 sys.path.insert(0, str(SRC_DIR))
 
+from debate.evaluation import evaluate_result
 from debate.models import create_model_clients
 from debate.pipeline import run_debate_for_problem
 
@@ -29,13 +30,23 @@ def main() -> None:
     output_path = PROJECT_ROOT / "outputs" / "demo_result.json"
     output_path.parent.mkdir(exist_ok=True)
 
+    evaluation = evaluate_result(result, problem)
+
+    output = {
+        "result": result,
+        "evaluation": evaluation,
+    }
+
     with output_path.open("w", encoding="utf-8") as file:
-        json.dump(result, file, indent=2)
+        json.dump(output, file, indent=2)
 
     print(f"Saved result to {output_path}")
 
     print("Debate result:")
     print(json.dumps(result, indent=2))
+
+    print("\nEvaluation:")
+    print(json.dumps(evaluation, indent=2))
 
 
 if __name__ == "__main__":
