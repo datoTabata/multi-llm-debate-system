@@ -62,5 +62,141 @@
   "correct_answer": "10",
   "explanation": "The number of 2-element subsets from 5 elements is C(5,2) = 5! / (2!3!) = 10.",
   "difficulty": "easy"
+  },
+  {
+  "id": "math_005",
+  "category": "Mathematical/Logical Reasoning",
+  "question": "A sequence is defined by a_1 = 2 and a_n = 3a_{n-1} + 1 for n > 1. What is a_4?",
+  "correct_answer": "67",
+  "explanation": "a_2 = 3(2) + 1 = 7, a_3 = 3(7) + 1 = 22, and a_4 = 3(22) + 1 = 67.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "logic_003",
+  "category": "Logic Puzzles & Constraint Satisfaction",
+  "question": "Four people are seated in a row. Alice is not next to Bob. Carol is immediately to the left of David. Bob is at one end. One valid seating order from left to right is what?",
+  "correct_answer": "Bob, Carol, David, Alice",
+  "explanation": "Bob can sit at the left end, Carol immediately to David's left in the middle, and Alice at the right end. Alice is not next to Bob, so Bob, Carol, David, Alice is valid.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "physics_002",
+  "category": "Physics & Scientific Reasoning",
+  "question": "A 2 kg object accelerates at 3 m/s^2. What net force acts on it?",
+  "correct_answer": "6 N",
+  "explanation": "Using Newton's second law, F = ma = 2 kg * 3 m/s^2 = 6 N.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "game_002",
+  "category": "Strategic Game Theory",
+  "question": "In the classic Prisoner's Dilemma played once, what is the dominant strategy for each player?",
+  "correct_answer": "Defect",
+  "explanation": "In a one-shot Prisoner's Dilemma, each player receives a better individual payoff by defecting regardless of what the other player does.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "math_006",
+  "category": "Mathematical/Logical Reasoning",
+  "question": "How many integers from 1 to 100 inclusive are divisible by 3 or 5?",
+  "correct_answer": "47",
+  "explanation": "There are floor(100/3) = 33 multiples of 3, floor(100/5) = 20 multiples of 5, and floor(100/15) = 6 multiples of both. By inclusion-exclusion, 33 + 20 - 6 = 47.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "physics_003",
+  "category": "Physics & Scientific Reasoning",
+  "question": "A ball is dropped from rest. Ignoring air resistance and using g = 9.8 m/s^2, how far does it fall in 2 seconds?",
+  "correct_answer": "19.6 m",
+  "explanation": "For motion from rest, distance is s = (1/2)gt^2. With g = 9.8 and t = 2, s = 0.5 * 9.8 * 4 = 19.6 m.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "logic_004",
+  "category": "Logic Puzzles & Constraint Satisfaction",
+  "question": "There are three boxes labeled Apples, Oranges, and Mixed. All labels are wrong. You may draw one fruit from one box. Which labeled box should you draw from to determine all correct labels?",
+  "correct_answer": "Mixed",
+  "explanation": "Since all labels are wrong, the box labeled Mixed cannot be mixed. Drawing one fruit from it reveals whether it contains only apples or only oranges, allowing the remaining labels to be determined.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "math_007",
+  "category": "Mathematical/Logical Reasoning",
+  "question": "What is the smallest positive integer divisible by 4, 6, and 9?",
+  "correct_answer": "36",
+  "explanation": "The least common multiple of 4, 6, and 9 is found from prime factors: 4 = 2^2, 6 = 2*3, and 9 = 3^2, so LCM = 2^2 * 3^2 = 36.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "game_003",
+  "category": "Strategic Game Theory",
+  "question": "Two players simultaneously choose Heads or Tails. Player 1 wins if the choices match, and Player 2 wins if they differ. What type of game is this?",
+  "correct_answer": "Matching pennies",
+  "explanation": "This is the standard matching pennies game, a zero-sum game where one player wants matching choices and the other wants different choices.",
+  "difficulty": "easy"
+  },
+  {
+    "id": "math_008",
+    "category": "Mathematical/Logical Reasoning",
+    "question": "A committee of 3 people is chosen from 7 people. How many different committees are possible?",
+    "correct_answer": "35",
+    "explanation": "The number of committees is C(7,3) = 7! / (3!4!) = 35.",
+    "difficulty": "easy"
+  },
+  {
+  "id": "physics_004",
+  "category": "Physics & Scientific Reasoning",
+  "question": "A 12 V battery is connected across a 6 ohm resistor. What current flows through the resistor?",
+  "correct_answer": "2 A",
+  "explanation": "By Ohm's law, I = V/R = 12/6 = 2 A.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "logic_005",
+  "category": "Logic Puzzles & Constraint Satisfaction",
+  "question": "A statement says, 'This statement is false.' What is the name of this type of paradox?",
+  "correct_answer": "Liar paradox",
+  "explanation": "The statement creates a contradiction by asserting its own falsehood, which is known as the liar paradox.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "math_009",
+  "category": "Mathematical/Logical Reasoning",
+  "question": "If x + y = 10 and x - y = 4, what is x?",
+  "correct_answer": "7",
+  "explanation": "Adding the two equations gives 2x = 14, so x = 7.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "game_004",
+  "category": "Strategic Game Theory",
+  "question": "In a zero-sum game, if Player 1 gains 5 utility, what happens to Player 2's utility?",
+  "correct_answer": "Player 2 loses 5 utility",
+  "explanation": "In a zero-sum game, one player's gain is exactly balanced by the other player's loss.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "physics_005",
+  "category": "Physics & Scientific Reasoning",
+  "question": "A wave has frequency 5 Hz and wavelength 2 meters. What is its speed?",
+  "correct_answer": "10 m/s",
+  "explanation": "Wave speed is v = f * wavelength = 5 * 2 = 10 m/s.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "logic_006",
+  "category": "Logic Puzzles & Constraint Satisfaction",
+  "question": "If all Bloops are Razzies and all Razzies are Lazzies, what can be concluded about Bloops?",
+  "correct_answer": "All Bloops are Lazzies",
+  "explanation": "By transitive reasoning, if every Bloop is a Razzie and every Razzie is a Lazzie, then every Bloop is a Lazzie.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "math_010",
+  "category": "Mathematical/Logical Reasoning",
+  "question": "What is the remainder when 2^10 is divided by 7?",
+  "correct_answer": "2",
+  "explanation": "2^3 = 8 is congruent to 1 mod 7. Since 2^10 = 2^9 * 2, and 2^9 is congruent to 1 mod 7, the remainder is 2.",
+  "difficulty": "medium"
   }
 ]
