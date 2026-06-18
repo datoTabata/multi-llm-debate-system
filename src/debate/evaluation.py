@@ -95,3 +95,41 @@ def calculate_consensus_rate(results: list[dict]) -> float:
     consensus_count = sum(1 for result in results if has_consensus(result))
 
     return consensus_count / len(results)
+
+
+def has_disagreement(result: dict) -> bool:
+    """Check whether solvers produced different refined answers."""
+
+    return not has_consensus(result)
+
+
+def judge_selected_correct_answer(result: dict, problem: dict) -> bool:
+    """Check whether the judge selected a solver with the correct answer."""
+
+    winner = extract_winner(result["judgment"])
+    refined_solution = result["refined_solutions"].get(winner, "")
+    predicted_answer = extract_refined_answer(refined_solution)
+
+    return exact_match(predicted_answer, problem["correct_answer"])
+
+
+def calculate_judge_accuracy_on_disagreements(
+    results: list[dict],
+    problems_by_id: dict[str, dict],
+) -> float | None:
+    """Calculate judge accuracy only for problems with solver disagreement."""
+
+    disagreement_results = [result for result in results if has_disagreement(result)]
+
+    if not disagreement_results:
+        return None
+
+    correct_count = 0
+
+    for result in disagreement_results:
+        problem = problems_by_id[result["problem_id"]]
+
+        if judge_selected_correct_answer(result, problem):
+            correct_count += 1
+
+    return correct_count / len(disagreement_results)

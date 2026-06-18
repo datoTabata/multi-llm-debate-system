@@ -9,6 +9,7 @@ sys.path.insert(0, str(SRC_DIR))
 from debate.evaluation import (
     calculate_accuracy,
     calculate_consensus_rate,
+    calculate_judge_accuracy_on_disagreements,
     evaluate_result,
 )
 from debate.models import create_model_clients
@@ -40,6 +41,11 @@ def main() -> None:
 
     accuracy = calculate_accuracy(evaluations)
     consensus_rate = calculate_consensus_rate(results)
+    problems_by_id = {problem["id"]: problem for problem in problems}
+    judge_accuracy_on_disagreements = calculate_judge_accuracy_on_disagreements(
+        results,
+        problems_by_id,
+    )
 
     output_path = PROJECT_ROOT / "outputs" / "demo_result.json"
     output_path.parent.mkdir(exist_ok=True)
@@ -49,6 +55,7 @@ def main() -> None:
         "evaluations": evaluations,
         "accuracy": accuracy,
         "consensus_rate": consensus_rate,
+        "judge_accuracy_on_disagreements": judge_accuracy_on_disagreements,
     }
 
     with output_path.open("w", encoding="utf-8") as file:
@@ -58,6 +65,7 @@ def main() -> None:
     print(f"Problems evaluated: {len(problems)}")
     print(f"Accuracy: {accuracy:.2f}")
     print(f"Consensus rate: {consensus_rate:.2f}")
+    print(f"Judge accuracy on disagreements: {judge_accuracy_on_disagreements}")
 
     print("\nEvaluations:")
     print(json.dumps(evaluations, indent=2))
