@@ -49,16 +49,20 @@ def main() -> None:
     )
     improvement_rate = calculate_improvement_rate(results, problems_by_id)
 
+    metrics = {
+        "accuracy": accuracy,
+        "consensus_rate": consensus_rate,
+        "judge_accuracy_on_disagreements": judge_accuracy_on_disagreements,
+        "improvement_rate": improvement_rate,
+    }
+
     output_path = PROJECT_ROOT / "outputs" / "demo_result.json"
     output_path.parent.mkdir(exist_ok=True)
 
     output = {
         "results": results,
         "evaluations": evaluations,
-        "accuracy": accuracy,
-        "consensus_rate": consensus_rate,
-        "judge_accuracy_on_disagreements": judge_accuracy_on_disagreements,
-        "improvement_rate": improvement_rate,
+        "metrics": metrics,
     }
 
     with output_path.open("w", encoding="utf-8") as file:
@@ -66,10 +70,10 @@ def main() -> None:
 
     print(f"Saved result to {output_path}")
     print(f"Problems evaluated: {len(problems)}")
-    print(f"Accuracy: {accuracy:.2f}")
-    print(f"Consensus rate: {consensus_rate:.2f}")
-    print(f"Judge accuracy on disagreements: {judge_accuracy_on_disagreements}")
-    print(f"Improvement rate: {improvement_rate:.2f}")
+    print(f"Accuracy: {metrics['accuracy']:.2f}")
+    print(f"Consensus rate: {metrics['consensus_rate']:.2f}")
+    print(f"Judge accuracy on disagreements: {metrics['judge_accuracy_on_disagreements']}")
+    print(f"Improvement rate: {metrics['improvement_rate']:.2f}")
 
     print("\nEvaluations:")
     print(json.dumps(evaluations, indent=2))
