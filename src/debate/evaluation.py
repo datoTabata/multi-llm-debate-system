@@ -29,6 +29,13 @@ def extract_winner(judgment: str) -> str:
     return data.get("winner", "")
 
 
+def extract_initial_answer(solution: str) -> str:
+    """Extract the final answer from an initial solver response."""
+
+    data = parse_json_response(solution)
+    return data.get("answer", "")
+
+
 def extract_refined_answer(refined_solution: str) -> str:
     """Extract the final answer from a refined solution response."""
 
@@ -113,6 +120,18 @@ def judge_selected_correct_answer(result: dict, problem: dict) -> bool:
     return exact_match(predicted_answer, problem["correct_answer"])
 
 
+def solver_improved(solution: str, refined_solution: str, correct_answer: str) -> bool:
+    """Check whether refinement changed an incorrect answer into a correct one."""
+
+    initial_answer = extract_initial_answer(solution)
+    refined_answer = extract_refined_answer(refined_solution)
+
+    initially_correct = exact_match(initial_answer, correct_answer)
+    finally_correct = exact_match(refined_answer, correct_answer)
+
+    return not initially_correct and finally_correct
+
+
 def calculate_judge_accuracy_on_disagreements(
     results: list[dict],
     problems_by_id: dict[str, dict],
@@ -133,3 +152,29 @@ def calculate_judge_accuracy_on_disagreements(
             correct_count += 1
 
     return correct_count / len(disagreement_results)
+
+
+def calculate_improvement_rate(
+    results: list[dict],
+    problems_by_id: dict[str, dict],
+) -> float:
+    """Calculate how often refinement improved solver answers."""
+
+    total_solver_attempts = 0
+    improved_count = 0
+
+    for result in results:
+        problem = problems_by_id[result["problem_id"]]
+        correct_answer = problem["correct_answer"]
+
+        for solver_id, solution in result["solutions"].items():
+            refined_solution = result["refined_solutions"][solver_id]
+            total_solver_attempts += 1
+
+            if solver_improved(solution, refined_solution, correct_answer):
+                improved_count += 1
+
+    if total_solver_attempts == 0:
+        return 0.0
+
+    return improved_count / total_solver_attempts

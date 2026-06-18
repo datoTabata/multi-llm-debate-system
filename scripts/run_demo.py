@@ -9,6 +9,7 @@ sys.path.insert(0, str(SRC_DIR))
 from debate.evaluation import (
     calculate_accuracy,
     calculate_consensus_rate,
+    calculate_improvement_rate,
     calculate_judge_accuracy_on_disagreements,
     evaluate_result,
 )
@@ -46,6 +47,7 @@ def main() -> None:
         results,
         problems_by_id,
     )
+    improvement_rate = calculate_improvement_rate(results, problems_by_id)
 
     output_path = PROJECT_ROOT / "outputs" / "demo_result.json"
     output_path.parent.mkdir(exist_ok=True)
@@ -56,6 +58,7 @@ def main() -> None:
         "accuracy": accuracy,
         "consensus_rate": consensus_rate,
         "judge_accuracy_on_disagreements": judge_accuracy_on_disagreements,
+        "improvement_rate": improvement_rate,
     }
 
     with output_path.open("w", encoding="utf-8") as file:
@@ -66,6 +69,7 @@ def main() -> None:
     print(f"Accuracy: {accuracy:.2f}")
     print(f"Consensus rate: {consensus_rate:.2f}")
     print(f"Judge accuracy on disagreements: {judge_accuracy_on_disagreements}")
+    print(f"Improvement rate: {improvement_rate:.2f}")
 
     print("\nEvaluations:")
     print(json.dumps(evaluations, indent=2))

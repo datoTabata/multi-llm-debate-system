@@ -35,6 +35,13 @@ class MockClient(ModelClient):
                 '"reasoning": "This model is better suited for solution generation."}'
             )
 
+        if "solve the following problem independently" in prompt_lower:
+            return (
+                '{"reasoning": "This is an initial mock solution.", '
+                '"answer": "5", '
+                '"confidence": 0.65}'
+            )
+
         if "review the following solution" in prompt_lower:
             return (
                 '{"strengths": ["The solution gives a clear final answer."], '
