@@ -22,5 +22,45 @@
     "correct_answer": "3",
     "explanation": "The number of domino tilings of a 2xn rectangle follows Fibonacci numbers. For n = 3, the answer is 3.",
     "difficulty": "medium"
+  },
+  {
+  "id": "math_003",
+  "category": "Mathematical/Logical Reasoning",
+  "question": "A fair six-sided die is rolled twice. What is the probability that the sum of the two rolls is 7?",
+  "correct_answer": "1/6",
+  "explanation": "There are 36 possible ordered outcomes. The outcomes summing to 7 are (1,6), (2,5), (3,4), (4,3), (5,2), and (6,1), so the probability is 6/36 = 1/6.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "logic_002",
+  "category": "Logic Puzzles & Constraint Satisfaction",
+  "question": "Three people A, B, and C are suspects. Exactly one is guilty. A says: 'B is guilty.' B says: 'C is guilty.' C says: 'B is lying.' If exactly one person is telling the truth, who is guilty?",
+  "correct_answer": "A",
+  "explanation": "If A is guilty, then A's statement is false, B's statement is false, and C's statement is true. Exactly one person tells the truth, so A is guilty.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "physics_001",
+  "category": "Physics & Scientific Reasoning",
+  "question": "A car travels 60 kilometers in 1.5 hours. What is its average speed in kilometers per hour?",
+  "correct_answer": "40",
+  "explanation": "Average speed equals distance divided by time: 60 / 1.5 = 40 km/h.",
+  "difficulty": "easy"
+  },
+  {
+  "id": "game_001",
+  "category": "Strategic Game Theory",
+  "question": "In a second-price sealed-bid auction with private values, what is the dominant strategy for a bidder?",
+  "correct_answer": "Bid your true value",
+  "explanation": "In a second-price auction, the winner pays the second-highest bid, so bidding truthfully is a dominant strategy under the standard private-value assumptions.",
+  "difficulty": "medium"
+  },
+  {
+  "id": "math_004",
+  "category": "Mathematical/Logical Reasoning",
+  "question": "How many subsets of a set with 5 elements contain exactly 2 elements?",
+  "correct_answer": "10",
+  "explanation": "The number of 2-element subsets from 5 elements is C(5,2) = 5! / (2!3!) = 10.",
+  "difficulty": "easy"
   }
 ]
