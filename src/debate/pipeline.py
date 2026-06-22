@@ -7,7 +7,7 @@ from debate.prompts import (
     build_role_preference_prompt,
     build_solver_prompt,
 )
-
+from debate.schemas import JudgeResponse, RefinementResponse
 
 def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
     """Collect role preferences from every model."""
@@ -103,7 +103,8 @@ def refine_solutions(
         model = models[model_name]
         reviews = peer_reviews[solver_id]
         prompt = build_refinement_prompt(problem, original_solution, reviews)
-        refined_solutions[solver_id] = model.generate(prompt)
+        refined_solution = model.generate_structured(prompt, RefinementResponse)
+        refined_solutions[solver_id] = refined_solution.model_dump_json()
 
     return refined_solutions
 
@@ -128,7 +129,8 @@ def judge_solutions(
         refined_solutions,
     )
 
-    return judge_model.generate(prompt)
+    judgment = judge_model.generate_structured(prompt, JudgeResponse)
+    return judgment.model_dump_json()
 
 
 def run_debate_for_problem(problem: dict, models: dict) -> dict:

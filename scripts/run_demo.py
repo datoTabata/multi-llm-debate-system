@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -28,6 +29,8 @@ def load_problems() -> list[dict]:
 
 def main() -> None:
     problems = load_problems()
+    problem_limit = int(os.getenv("PROBLEM_LIMIT", len(problems)))
+    problems = problems[:problem_limit]
     models = create_model_clients()
 
     results = []

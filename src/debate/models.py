@@ -1,4 +1,8 @@
+import os
 from dataclasses import dataclass
+
+from dotenv import load_dotenv
+from openai import OpenAI
 
 
 class ModelClient:
@@ -7,6 +11,9 @@ class ModelClient:
     name: str
 
     def generate(self, prompt: str) -> str:
+        raise NotImplementedError
+
+    def generate_structured(self, prompt: str, response_format):
         raise NotImplementedError
 
 
@@ -72,9 +79,55 @@ class MockClient(ModelClient):
 
         return "Mock response"
 
+    def generate_structured(self, prompt: str, response_format):
+        response = self.generate(prompt)
+        return response_format.model_validate_json(response)
+
+
+@dataclass
+class OpenAIClient(ModelClient):
+    """OpenAI model client."""
+
+    name: str
+    model_name: str
+
+    def generate(self, prompt: str) -> str:
+        client = OpenAI()
+
+        response = client.responses.create(
+            model=self.model_name,
+            input=prompt,
+        )
+
+        return response.output_text
+
+    def generate_structured(self, prompt: str, response_format):
+        client = OpenAI()
+
+        response = client.responses.parse(
+            model=self.model_name,
+            input=prompt,
+            text_format=response_format,
+        )
+
+        return response.output_parsed
+
 
 def create_model_clients() -> dict[str, ModelClient]:
-    """Create model clients for one debate run."""
+    """Create the four model clients used in one debate run."""
+
+    load_dotenv()
+
+    provider = os.getenv("MODEL_PROVIDER", "mock")
+    model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    if provider == "openai":
+        return {
+            "model_a": OpenAIClient("model_a", model_name),
+            "model_b": OpenAIClient("model_b", model_name),
+            "model_c": OpenAIClient("model_c", model_name),
+            "model_d": OpenAIClient("model_d", model_name),
+        }
 
     return {
         "model_a": MockClient("model_a"),

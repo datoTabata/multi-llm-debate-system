@@ -78,6 +78,11 @@ Return:
 - refined solution
 - refined final answer
 - confidence
+
+Important:
+The refined_answer field must contain only the final answer.
+Do not include explanation, Markdown, or a full sentence in refined_answer.
+For example, use "4" instead of "The answer is 4."
 """
 
 
