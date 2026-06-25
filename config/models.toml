@@ -8,12 +8,27 @@
 
 # Run settings (previously the PROBLEM_LIMIT / OUTPUT_FILE env vars).
 [run]
-problem_limit = 1            # how many problems to run; set to 0 (or remove) for all
-output_file = "demo_result.json"
+# Which problems to run:
+#  - If problem_ids is non-empty, exactly those run (in order) and problem_limit
+#    is ignored.
+#  - Otherwise problem_limit problems are chosen at RANDOM. Set seed for a
+#    reproducible sample; remove/comment seed for a fresh sample each run.
+dataset = "llm_hard_problems.json"  # which file under data/ to load
+problem_ids = []             # e.g. ["math_001", "game_001"]
+problem_limit = 0            # how many random problems to run; 0 (or remove) = all
+seed = 0
+max_concurrent_problems = 0  # 0 = run all problems at once; set a cap to throttle
+output_file = "hard_result.json"
 
 [defaults]
 temperature = 0.7
 max_tokens = 40000          # cap per response; raise if solutions get truncated
+
+# Strong model used to grade free-answer problems (semantic equivalence check).
+# Number / multiple-choice problems are graded deterministically with no API call.
+[grader]
+model = "google/gemini-2.5-flash"
+temperature = 0.0
 
 [participants.model_a]
 model = "openai/gpt-4o-mini"

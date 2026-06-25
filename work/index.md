@@ -16,9 +16,11 @@ LLM and majority-vote baselines on a 25-problem dataset. Full spec in
 | Phase | Item | Status |
 |-------|------|--------|
 | 1 | 25-problem dataset (`data/problems.json`) | ✅ done |
-| 2 | 5-stage debate pipeline (`src/debate/pipeline.py`) | ✅ done |
+| 2 | 5-stage debate pipeline (`src/debate/pipeline.py`) — **async** | ✅ done |
 | 2 | Model provider — **OpenRouter only**, config-driven | ✅ done |
+| 2 | Concurrency — async stages + concurrent problems | ✅ done |
 | 3 | System metrics (accuracy, consensus, judge-acc, improvement) | ✅ done |
+| 3 | Type-aware answer checking (number / MC / free-answer + LLM grader) | ✅ done |
 | 3 | **Baselines** (single-LLM, majority vote) | ❌ missing |
 | 3 | Comparison plot (system vs baselines) | ⚠️ partial — only system metrics plotted |
 
@@ -27,32 +29,69 @@ Everything is driven by **`config/models.toml`**:
 - `[participants.model_a..d]` — which model fills each slot (current mix:
   gpt-4o-mini, claude-haiku-4.5, gemini-2.5-flash, grok-4.3).
 - `[defaults]` — `temperature`, `max_tokens` (now 40000; per-slot overridable).
-- `[run]` — `problem_limit`, `output_file`.
+- `[run]` — which problems to run:
+  - `dataset` — which file under `data/` to load (e.g. `problems.json` or
+    `llm_hard_problems.json`).
+  - `problem_ids` — if non-empty, run exactly those (in order); `problem_limit`
+    ignored.
+  - `problem_limit` + `seed` — otherwise run a RANDOM sample of that many
+    (seeded = reproducible; remove `seed` for fresh randomness each run).
+  - `max_concurrent_problems` — 0 = all problems at once; positive = throttle.
+  - `output_file`.
 - API key lives in `.env` as `OPEN_ROUTER_KEY` (gitignored).
 
-The run output (`outputs/<output_file>`) now includes a top-level `config` block
-recording each participant's model/temperature/max_tokens and the problem_limit,
-so every result is self-describing.
+The run output (`outputs/<output_file>`) includes a top-level `config` block
+(participants' model/temperature/max_tokens, chosen problem_ids, seed), so every
+result is self-describing.
+
+## Concurrency (asyncio)
+The pipeline is async. Within a problem, each stage fans out its independent
+model calls with `asyncio.gather` (4 role-prefs, 3 solves, 6 reviews, 3 refines);
+stages stay sequential because each depends on the previous. Across problems,
+`run_all_debates` runs every problem concurrently (capped by
+`max_concurrent_problems`). Client async methods: `OpenRouterClient.agenerate` /
+`agenerate_structured` (SDK `chat.send_async`). The grader stays sync.
 
 ```bash
 python scripts/run_demo.py        # runs the debate, writes outputs/<output_file>
-python scripts/plot_metrics.py    # plots metrics from outputs/demo_result.json
+python scripts/plot_metrics.py    # plots metrics for the latest run (reads output_file)
 ```
 
+## Datasets
+- `data/problems.json` — the 25-problem assignment dataset.
+- `data/llm_hard_problems.json` — 9 "easy for humans, hard for LLMs" overfitting
+  traps (horses, Monty-Hall-variant, river crossing, etc.). System scored 0.67
+  on these; see `outputs/hard_result.json`.
+
+## How answers are checked
+Each problem has an `answer_type`:
+- `number` — numeric compare (units stripped, fractions handled, rel-tol 1e-3).
+- `multiple_choice` — normalized string match.
+- `free_answer` — graded by an LLM (`[grader]` slot, default gemini-2.5-flash)
+  for semantic equivalence.
+
+All comparison logic lives in **`Problem.check(predicted, grader)`**
+(`src/debate/problem.py`) — one model, no inheritance, branches on
+`answer_type`. The grader is injected as a callable; if absent, free-answer
+falls back to a string match.
+
 ## File map
-- `config/models.toml` — models + run settings (single source of config).
-- `src/debate/models.py` — `OpenRouterClient` + `load_config` (official openrouter SDK).
+- `config/models.toml` — models + run settings + `[grader]` (single source of config).
+- `src/debate/models.py` — `OpenRouterClient`, `load_config`, grader factory.
+- `src/debate/problem.py` — `Problem` model + `check()` (type-aware grading).
 - `src/debate/pipeline.py` — the 5 debate stages.
 - `src/debate/schemas.py` — Pydantic structured-output schemas.
-- `src/debate/prompts.py` — prompt builders.
-- `src/debate/evaluation.py` — metrics.
-- `scripts/run_demo.py` — end-to-end runner.
-- `scripts/plot_metrics.py` — plot generator.
+- `src/debate/prompts.py` — prompt builders (incl. `build_grader_prompt`).
+- `src/debate/evaluation.py` — metrics (delegate to `Problem.check`).
+- `data/llm_hard_problems.json` — LLM-hard / human-easy problem set.
+- `scripts/run_demo.py` — async end-to-end runner (concurrent problems).
+- `scripts/plot_metrics.py` — plot generator (reads config `output_file`).
 
 ## Known issues / TODO
 - **Baselines not implemented** (required deliverable) — single-LLM and majority
   vote. Data already exists in each result; no new API calls needed.
-- **Answer matching is brittle** — exact string compare; see [`../notes.md`](../notes.md).
+- ~~Answer matching is brittle~~ — fixed: now type-aware via `Problem.check`
+  (number / multiple_choice / free_answer + LLM grader). See [`../notes.md`](../notes.md).
 - **Peer reviews are unstructured** — `generate_peer_reviews` uses `.generate()`
   (raw text) while every other stage is structured.
 - **Cleanups**: unused `pandas` dep; dead `OpenRouterClient.name` field; the
@@ -60,6 +99,22 @@ python scripts/plot_metrics.py    # plots metrics from outputs/demo_result.json
   re-parses them downstream).
 
 ## Recent changes
+- **2026-06-26** — Async pipeline + concurrency. Every stage fans out its
+  independent calls via `asyncio.gather`; problems run concurrently in
+  `run_all_debates` (capped by `max_concurrent_problems`). Added `agenerate` /
+  `agenerate_structured` on the client. 9 hard problems ran in ~2m13 vs ~9x
+  sequential.
+- **2026-06-26** — Added `[run] dataset` option + `data/llm_hard_problems.json`
+  (9 LLM-overfitting traps). Plotter now reads the config `output_file` and
+  saves `<stem>_plot.png` with value labels.
+- **2026-06-26** — Problem selection is config-driven: `[run] problem_ids` runs
+  an explicit set (ignoring `problem_limit`); otherwise `problem_limit` picks a
+  RANDOM sample (reproducible via `seed`). Output records the chosen ids + seed.
+- **2026-06-26** — Type-aware answer checking. Added `answer_type` to all 25
+  problems (16 number / 3 multiple_choice / 6 free_answer) and a single
+  `Problem.check()` method that grades deterministically for number/MC and via
+  an LLM grader (`[grader]` config) for free-answer. Evaluation metrics now
+  delegate to `Problem.check`; removed the old `exact_match`/`normalize_answer`.
 - **2026-06-26** — Picker round is now self-aware: each model is told its own
   OpenRouter id, the named peer roster, the debate flow, the current date, and a
   knowledge-cutoff warning (`build_role_preference_prompt` in `prompts.py`).

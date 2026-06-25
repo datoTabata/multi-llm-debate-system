@@ -1,18 +1,6 @@
 import json
 
 
-def normalize_answer(answer: str) -> str:
-    """Normalize an answer before comparison."""
-
-    return str(answer).strip().lower()
-
-
-def exact_match(predicted_answer: str, correct_answer: str) -> bool:
-    """Check whether two answers match exactly after normalization."""
-
-    return normalize_answer(predicted_answer) == normalize_answer(correct_answer)
-
-
 def parse_json_response(response: str) -> dict:
     """Parse a JSON model response."""
 
@@ -43,21 +31,25 @@ def extract_refined_answer(refined_solution: str) -> str:
     return data.get("refined_answer", "")
 
 
-def evaluate_result(result: dict, problem: dict) -> dict:
-    """Evaluate one debate result against the correct answer."""
+def evaluate_result(result: dict, problem, grader=None) -> dict:
+    """Evaluate one debate result against the correct answer.
+
+    `problem` is a Problem instance; grading is delegated to `problem.check`,
+    which uses the LLM `grader` only for free-answer problems.
+    """
 
     winner = extract_winner(result["judgment"])
     refined_solution = result["refined_solutions"].get(winner, "")
     predicted_answer = extract_refined_answer(refined_solution)
-    correct_answer = problem["correct_answer"]
 
-    is_correct = exact_match(predicted_answer, correct_answer)
+    is_correct = problem.check(predicted_answer, grader)
 
     return {
-        "problem_id": problem["id"],
+        "problem_id": problem.id,
+        "answer_type": problem.answer_type,
         "winner": winner,
         "predicted_answer": predicted_answer,
-        "correct_answer": correct_answer,
+        "correct_answer": problem.correct_answer,
         "is_correct": is_correct,
     }
 
@@ -110,31 +102,32 @@ def has_disagreement(result: dict) -> bool:
     return not has_consensus(result)
 
 
-def judge_selected_correct_answer(result: dict, problem: dict) -> bool:
+def judge_selected_correct_answer(result: dict, problem, grader=None) -> bool:
     """Check whether the judge selected a solver with the correct answer."""
 
     winner = extract_winner(result["judgment"])
     refined_solution = result["refined_solutions"].get(winner, "")
     predicted_answer = extract_refined_answer(refined_solution)
 
-    return exact_match(predicted_answer, problem["correct_answer"])
+    return problem.check(predicted_answer, grader)
 
 
-def solver_improved(solution: str, refined_solution: str, correct_answer: str) -> bool:
+def solver_improved(solution: str, refined_solution: str, problem, grader=None) -> bool:
     """Check whether refinement changed an incorrect answer into a correct one."""
 
     initial_answer = extract_initial_answer(solution)
     refined_answer = extract_refined_answer(refined_solution)
 
-    initially_correct = exact_match(initial_answer, correct_answer)
-    finally_correct = exact_match(refined_answer, correct_answer)
+    initially_correct = problem.check(initial_answer, grader)
+    finally_correct = problem.check(refined_answer, grader)
 
     return not initially_correct and finally_correct
 
 
 def calculate_judge_accuracy_on_disagreements(
     results: list[dict],
-    problems_by_id: dict[str, dict],
+    problems_by_id: dict,
+    grader=None,
 ) -> float | None:
     """Calculate judge accuracy only for problems with solver disagreement."""
 
@@ -148,7 +141,7 @@ def calculate_judge_accuracy_on_disagreements(
     for result in disagreement_results:
         problem = problems_by_id[result["problem_id"]]
 
-        if judge_selected_correct_answer(result, problem):
+        if judge_selected_correct_answer(result, problem, grader):
             correct_count += 1
 
     return correct_count / len(disagreement_results)
@@ -156,7 +149,8 @@ def calculate_judge_accuracy_on_disagreements(
 
 def calculate_improvement_rate(
     results: list[dict],
-    problems_by_id: dict[str, dict],
+    problems_by_id: dict,
+    grader=None,
 ) -> float:
     """Calculate how often refinement improved solver answers."""
 
@@ -165,13 +159,12 @@ def calculate_improvement_rate(
 
     for result in results:
         problem = problems_by_id[result["problem_id"]]
-        correct_answer = problem["correct_answer"]
 
         for solver_id, solution in result["solutions"].items():
             refined_solution = result["refined_solutions"][solver_id]
             total_solver_attempts += 1
 
-            if solver_improved(solution, refined_solution, correct_answer):
+            if solver_improved(solution, refined_solution, problem, grader):
                 improved_count += 1
 
     if total_solver_attempts == 0:

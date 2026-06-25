@@ -32,6 +32,11 @@ class SolutionResponse(BaseModel):
     confidence: float
 
 
+class GradeResponse(BaseModel):
+    is_correct: bool
+    reasoning: str
+
+
 class RolePreferenceResponse(BaseModel):
     preferred_role: Literal["Solver", "Judge"]
     solver_confidence: float

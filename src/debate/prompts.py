@@ -127,6 +127,29 @@ For example, use "4" instead of "The answer is 4."
 """
 
 
+def build_grader_prompt(question: str, predicted: str, correct: str) -> str:
+    """Build a prompt to grade a free-form answer against the reference answer."""
+
+    return f"""
+You are grading an answer to a problem. Decide whether the predicted answer is
+correct, i.e. semantically equivalent to the reference answer. Ignore wording,
+formatting, capitalization, and ordering differences — judge only the meaning.
+
+Problem:
+{question}
+
+Reference (correct) answer:
+{correct}
+
+Predicted answer:
+{predicted}
+
+Return:
+- is_correct (true or false)
+- short reasoning
+"""
+
+
 def build_judge_prompt(
     problem: dict,
     solutions: dict[str, str],

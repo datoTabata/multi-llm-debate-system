@@ -34,33 +34,27 @@ class OpenRouterClient:
     def _client(self) -> OpenRouter:
         return OpenRouter(api_key=os.getenv("OPEN_ROUTER_KEY"))
 
-    def generate(self, prompt: str) -> str:
-        result = self._client().chat.send(
-            model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-        )
+    def _send_kwargs(self, prompt: str, response_format=None) -> dict:
+        kwargs = {
+            "model": self.model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
 
-        return result.choices[0].message.content
-
-    def generate_structured(self, prompt: str, response_format):
-        result = self._client().chat.send(
-            model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            response_format={
+        if response_format is not None:
+            kwargs["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {
                     "name": response_format.__name__,
                     "schema_": response_format.model_json_schema(),
                 },
-            },
-        )
+            }
 
+        return kwargs
+
+    def _parse_structured(self, result, response_format):
         choice = result.choices[0]
-        content = choice.message.content
 
         if choice.finish_reason == "length":
             raise RuntimeError(
@@ -68,7 +62,56 @@ class OpenRouterClient:
                 f"{self.max_tokens}; raise max_tokens in config/models.toml."
             )
 
-        return response_format.model_validate_json(content)
+        return response_format.model_validate_json(choice.message.content)
+
+    def generate(self, prompt: str) -> str:
+        result = self._client().chat.send(**self._send_kwargs(prompt))
+        return result.choices[0].message.content
+
+    def generate_structured(self, prompt: str, response_format):
+        result = self._client().chat.send(**self._send_kwargs(prompt, response_format))
+        return self._parse_structured(result, response_format)
+
+    async def agenerate(self, prompt: str) -> str:
+        result = await self._client().chat.send_async(**self._send_kwargs(prompt))
+        return result.choices[0].message.content
+
+    async def agenerate_structured(self, prompt: str, response_format):
+        result = await self._client().chat.send_async(
+            **self._send_kwargs(prompt, response_format)
+        )
+        return self._parse_structured(result, response_format)
+
+
+def create_grader_client(config: dict | None = None) -> OpenRouterClient:
+    """Create the client used to grade free-answer problems (the [grader] slot)."""
+
+    load_dotenv()
+
+    if config is None:
+        config = load_config()
+
+    grader = config.get("grader", {})
+
+    return OpenRouterClient(
+        name="grader",
+        model_name=grader.get("model", "google/gemini-2.5-flash"),
+        temperature=grader.get("temperature", 0.0),
+        max_tokens=grader.get("max_tokens", config.get("defaults", {}).get("max_tokens", 4000)),
+    )
+
+
+def make_llm_grader(client: OpenRouterClient):
+    """Return a grader callable: grader(question, predicted, correct) -> bool."""
+
+    from debate.prompts import build_grader_prompt
+    from debate.schemas import GradeResponse
+
+    def grade(question: str, predicted: str, correct: str) -> bool:
+        prompt = build_grader_prompt(question, predicted, correct)
+        return client.generate_structured(prompt, GradeResponse).is_correct
+
+    return grade
 
 
 def create_model_clients(config: dict | None = None) -> dict[str, OpenRouterClient]:

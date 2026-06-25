@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from debate.prompts import (
@@ -14,38 +15,41 @@ from debate.schemas import (
     SolutionResponse,
 )
 
+SOLVER_IDS = ["solver_1", "solver_2", "solver_3"]
 
-def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
-    """Collect role preferences from every model."""
 
-    preferences = {}
+async def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
+    """Collect role preferences from every model, concurrently."""
 
-    for model_name, model in models.items():
+    async def preference_for(model_name: str, model) -> tuple[str, str]:
         peers = [other.model_name for slot, other in models.items() if slot != model_name]
         prompt = build_role_preference_prompt(problem, model.model_name, peers)
-        preference = model.generate_structured(prompt, RolePreferenceResponse)
-        preferences[model_name] = preference.model_dump_json()
+        preference = await model.agenerate_structured(prompt, RolePreferenceResponse)
+        return model_name, preference.model_dump_json()
 
-    return preferences
+    pairs = await asyncio.gather(
+        *(preference_for(name, model) for name, model in models.items())
+    )
+
+    return dict(pairs)
 
 
-def generate_independent_solutions(
+async def generate_independent_solutions(
     problem: dict,
     models: dict,
     roles: dict[str, str],
 ) -> dict[str, str]:
-    """Generate independent solutions from the solver models."""
+    """Generate independent solutions from the solver models, concurrently."""
 
-    solutions = {}
-
-    for solver_id in ["solver_1", "solver_2", "solver_3"]:
-        model_name = roles[solver_id]
-        model = models[model_name]
+    async def solve(solver_id: str) -> tuple[str, str]:
+        model = models[roles[solver_id]]
         prompt = build_solver_prompt(problem)
-        solution = model.generate_structured(prompt, SolutionResponse)
-        solutions[solver_id] = solution.model_dump_json()
+        solution = await model.agenerate_structured(prompt, SolutionResponse)
+        return solver_id, solution.model_dump_json()
 
-    return solutions
+    pairs = await asyncio.gather(*(solve(solver_id) for solver_id in SOLVER_IDS))
+
+    return dict(pairs)
 
 
 def assign_roles(models: dict, role_preferences: dict[str, str]) -> dict[str, str]:
@@ -71,54 +75,59 @@ def assign_roles(models: dict, role_preferences: dict[str, str]) -> dict[str, st
     }
 
 
-def generate_peer_reviews(
+async def generate_peer_reviews(
     problem: dict,
     models: dict,
     roles: dict[str, str],
     solutions: dict[str, str],
 ) -> dict[str, list[str]]:
-    """Generate peer reviews for each solver solution."""
+    """Generate peer reviews for each solver solution, all reviews concurrently."""
 
-    reviews = {solver_id: [] for solver_id in solutions}
+    pairs = [
+        (reviewer_id, solution_id)
+        for reviewer_id in solutions
+        for solution_id in solutions
+        if reviewer_id != solution_id
+    ]
 
-    for reviewer_id in solutions:
-        reviewer_model_name = roles[reviewer_id]
-        reviewer_model = models[reviewer_model_name]
+    async def review(reviewer_id: str, solution_id: str) -> tuple[str, str]:
+        reviewer_model = models[roles[reviewer_id]]
+        prompt = build_peer_review_prompt(problem, solution_id, solutions[solution_id])
+        text = await reviewer_model.agenerate(prompt)
+        return solution_id, text
 
-        for solution_id, solution in solutions.items():
-            if reviewer_id == solution_id:
-                continue
+    results = await asyncio.gather(*(review(r, s) for r, s in pairs))
 
-            prompt = build_peer_review_prompt(problem, solution_id, solution)
-            review = reviewer_model.generate(prompt)
-            reviews[solution_id].append(review)
+    reviews = {solution_id: [] for solution_id in solutions}
+    for solution_id, text in results:
+        reviews[solution_id].append(text)
 
     return reviews
 
 
-def refine_solutions(
+async def refine_solutions(
     problem: dict,
     models: dict,
     roles: dict[str, str],
     solutions: dict[str, str],
     peer_reviews: dict[str, list[str]],
 ) -> dict[str, str]:
-    """Refine solver solutions using peer reviews."""
+    """Refine solver solutions using peer reviews, concurrently."""
 
-    refined_solutions = {}
+    async def refine(solver_id: str, original_solution: str) -> tuple[str, str]:
+        model = models[roles[solver_id]]
+        prompt = build_refinement_prompt(problem, original_solution, peer_reviews[solver_id])
+        refined = await model.agenerate_structured(prompt, RefinementResponse)
+        return solver_id, refined.model_dump_json()
 
-    for solver_id, original_solution in solutions.items():
-        model_name = roles[solver_id]
-        model = models[model_name]
-        reviews = peer_reviews[solver_id]
-        prompt = build_refinement_prompt(problem, original_solution, reviews)
-        refined_solution = model.generate_structured(prompt, RefinementResponse)
-        refined_solutions[solver_id] = refined_solution.model_dump_json()
+    pairs = await asyncio.gather(
+        *(refine(solver_id, solution) for solver_id, solution in solutions.items())
+    )
 
-    return refined_solutions
+    return dict(pairs)
 
 
-def judge_solutions(
+async def judge_solutions(
     problem: dict,
     models: dict,
     roles: dict[str, str],
@@ -128,8 +137,7 @@ def judge_solutions(
 ) -> str:
     """Judge refined solutions and choose the best answer."""
 
-    judge_model_name = roles["judge"]
-    judge_model = models[judge_model_name]
+    judge_model = models[roles["judge"]]
 
     prompt = build_judge_prompt(
         problem,
@@ -138,19 +146,25 @@ def judge_solutions(
         refined_solutions,
     )
 
-    judgment = judge_model.generate_structured(prompt, JudgeResponse)
+    judgment = await judge_model.agenerate_structured(prompt, JudgeResponse)
     return judgment.model_dump_json()
 
 
-def run_debate_for_problem(problem: dict, models: dict) -> dict:
-    """Run the full debate workflow for one problem."""
+async def run_debate_for_problem(problem: dict, models: dict) -> dict:
+    """Run the full debate workflow for one problem.
 
-    role_preferences = collect_role_preferences(problem, models)
+    Stages run in sequence (each depends on the previous), but the independent
+    model calls *within* a stage run concurrently via asyncio.gather.
+    """
+
+    role_preferences = await collect_role_preferences(problem, models)
     roles = assign_roles(models, role_preferences)
-    solutions = generate_independent_solutions(problem, models, roles)
-    peer_reviews = generate_peer_reviews(problem, models, roles, solutions)
-    refined_solutions = refine_solutions(problem, models, roles, solutions, peer_reviews)
-    judgment = judge_solutions(
+    solutions = await generate_independent_solutions(problem, models, roles)
+    peer_reviews = await generate_peer_reviews(problem, models, roles, solutions)
+    refined_solutions = await refine_solutions(
+        problem, models, roles, solutions, peer_reviews
+    )
+    judgment = await judge_solutions(
         problem,
         models,
         roles,
