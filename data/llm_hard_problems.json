@@ -79,5 +79,185 @@
     "answer_type": "free_answer",
     "explanation": "Since the top (third) floor is at street level, the other two floors must be below ground, leaving only one story above ground. LLMs typically answer three because they assume a normal building with the ground floor at the bottom rather than reasoning from the clue that the top floor meets the street.",
     "difficulty": "easy"
+  },
+  {
+    "id": "hard_011",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "In a toy box, there's a red ball, a blue truck, and a green dinosaur. The red ball is not next to the blue truck, and the green dinosaur is next to the red ball. Which toy is in the middle?",
+    "correct_answer": "The green dinosaur",
+    "answer_type": "free_answer",
+    "explanation": "With three toys in a row, 'red ball not next to blue truck' forces those two to the ends, so the green dinosaur (next to the red ball) sits in the middle. LLMs often mishandle the spatial constraints and place the wrong toy in the middle.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_012",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "Four children - Alex, Bella, Charlie, and Dana - are sitting around a picnic table. Alex is facing Bella. Charlie is sitting to the right of Bella. Who is sitting to the left of Alex?",
+    "correct_answer": "Charlie",
+    "answer_type": "free_answer",
+    "explanation": "Alex and Bella face each other across the table; Charlie sits to Bella's right, which puts him to Alex's left, and Dana takes the last seat. LLMs commonly lose track of the facing directions and answer Dana.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_013",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "A man leaves home, makes a left turn and walks straight for a km and reaches 300m elevation, makes another left turn and walks straight for a km and reaches 500m elevation, makes another left turn and walks straight for a km and reaches 900m elevation, and turns left again and walks straight for a km. How far away is he from his starting point and what is his final elevation?",
+    "correct_answer": "He ends up back at his starting point (0 km away)",
+    "answer_type": "free_answer",
+    "explanation": "Four left turns of 1 km each trace a square, so he returns to his starting point (0 km away); being the same point, his elevation must equal home's, making the rising elevations a contradictory distractor. LLMs fixate on the elevation numbers instead of noticing the path is a closed loop.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_014",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "A group of four people needs to cross a bridge at night. The bridge is very old and rickety. They have only one torch and because it's night, the torch is necessary to cross the bridge. Each person walks at a different speed: A takes 1 minute to cross, B takes 2 minutes, C takes 5 minutes, and D takes 10 minutes. What is the fastest time they can all get across the bridge?",
+    "correct_answer": "10 minutes",
+    "answer_type": "number",
+    "explanation": "Nothing limits how many people cross at once, so all four cross together in the time of the slowest walker - 10 minutes. LLMs overfit to the classic version that allows only two on the bridge at a time and answer 17 minutes.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_015",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "You're in a room with two doors that lead out. One door leads to certain death, and the other door leads to freedom. There are two guardians, one by each door. One taller guardian always tells the truth and guards the death door, the other always lies. What is the minimum number of questions needed to ask the guards to get to safety?",
+    "correct_answer": "0",
+    "answer_type": "number",
+    "explanation": "You are told the truth-telling guardian is the taller one and that he guards the death door, so the other guardian's door is freedom - no questions needed. LLMs overfit to the classic two-guards riddle and answer 1.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_016",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "You have 3 switches in front of you - A, B and C. You have 3 light bulbs in front of you in the same room - one red, one blue, one purple. They are LED and do not get warm when turned on. You want to know which switch turns on which light bulb. What is the best way to determine this?",
+    "correct_answer": "Flip each switch one at a time and see which bulb lights up.",
+    "answer_type": "free_answer",
+    "explanation": "Because the bulbs are in the same room and visible, you just turn on one switch at a time and watch which bulb lights. LLMs overfit to the classic version where the bulbs are in another room and invent the heat trick that the 'LED do not get warm' clue is meant to rule out.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_017",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "A king has 1000 sweet bottles of wine, and one contains a very bitter poison. The poison takes effect exactly 24 hours after consumption. The king needs to find the poisoned bottle in 24 hours for an event. He has 10 prisoners to test the wine. What is the easiest way for him to identify the poisoned bottle?",
+    "correct_answer": "Number the bottles in binary; each prisoner drinks from bottles with a 1 in their bit, and which prisoners die spells out the bottle.",
+    "answer_type": "free_answer",
+    "explanation": "Ten prisoners give 2^10 = 1024 outcomes, enough to encode 1000 bottles in binary; after 24 hours the set of prisoners who die gives the poisoned bottle's number. This is the standard solution, included as a control that LLMs often do get right.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_018",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "Write a grammatically correct sentence without reusing any letter more than once.",
+    "correct_answer": "Any grammatical sentence with no repeated letters, e.g. 'Mr Jock, TV quiz PhD, bags few lynx.'",
+    "answer_type": "free_answer",
+    "explanation": "The task needs an isogram sentence in which no letter appears twice; perfect pangrams like 'Mr Jock, TV quiz PhD, bags few lynx.' qualify. Hard to grade automatically (every letter must be checked) and LLMs usually emit sentences with obvious repeats.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_019",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "An arrow points up. We rotate it 90 degrees to the left, mirror it along its flat end, and rotate it another 90 degrees to the left. Which direction is it pointing?",
+    "correct_answer": "Up",
+    "answer_type": "free_answer",
+    "explanation": "Rotating up 90 deg left gives left; mirroring a left-pointing arrow across its flat (tail) end reverses it to right; rotating right 90 deg left gives up again. LLMs tend to drop or misapply one of the three transformations.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_020",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "Write a sentence where every word starts with the letter A.",
+    "correct_answer": "Any sentence whose words all begin with 'A', e.g. 'Angry Alice ate amazing apples.'",
+    "answer_type": "free_answer",
+    "explanation": "Simply produce a sentence in which every word begins with A. Easy for humans, but LLMs frequently slip in words starting with other letters; also somewhat awkward to grade automatically.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_021",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "Sally (a girl) has 3 brothers. Each brother has 2 sisters. How many sisters does Sally have?",
+    "correct_answer": "1",
+    "answer_type": "number",
+    "explanation": "Each brother's 2 sisters are the same two girls in the family - Sally and one other - so Sally has exactly 1 sister. LLMs often echo the number in the prompt and answer 2.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_022",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "I'm in London and facing west, is Edinburgh to my left or my right?",
+    "correct_answer": "Right",
+    "answer_type": "free_answer",
+    "explanation": "Edinburgh is north of London; when you face west, north is on your right-hand side, so Edinburgh is to your right. LLMs frequently get the facing-direction mapping backwards and answer left.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_023",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "Count the number of occurrences of the letter 'L' in the word 'LOLLAPALOOZA'.",
+    "correct_answer": "4",
+    "answer_type": "number",
+    "explanation": "L-O-L-L-A-P-A-L-O-O-Z-A contains the letter L four times. Sub-word tokenization makes exact character counting a common LLM failure (e.g. answering 5).",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_024",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "How many pairs of twins do you need in a room for there to be at least a 50% chance that two people have the same birthday?",
+    "correct_answer": "1",
+    "answer_type": "number",
+    "explanation": "Twins share a birthday, so a single pair already guarantees (100%) that two people share a birthday. LLMs overfit to the birthday paradox and answer 23.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_025",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "A partially full hotel has an infinite number of fully furnished rooms. How does it accommodate one more guest?",
+    "correct_answer": "Put the guest in any empty room - the hotel is only partially full.",
+    "answer_type": "free_answer",
+    "explanation": "Because the hotel is only partially full, empty rooms already exist, so the new guest just takes one. LLMs overfit to Hilbert's Hotel (which is full) and describe shifting every guest to the next room.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_026",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "A runaway trolley is heading down the tracks away from five people upwards of the track. You are near a lever that can switch the trolley to another track. Does it impact people's lives if you pull the lever?",
+    "correct_answer": "No - the trolley is moving away from the people, so no one is in danger.",
+    "answer_type": "free_answer",
+    "explanation": "The trolley is heading away from the five people, so they are not in its path and pulling the lever changes nothing. LLMs overfit to the classic trolley problem and agonise over a moral dilemma that isn't there.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_027",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "How do you measure exactly 4 gallons of water with only a 3-gallon, 5-gallon, and 4-gallon jug?",
+    "correct_answer": "Just fill the 4-gallon jug.",
+    "answer_type": "free_answer",
+    "explanation": "One of the jugs is already exactly 4 gallons, so you simply fill it. LLMs overfit to the Die Hard water-pouring puzzle and produce an elaborate sequence of fills and transfers.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_028",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "A 2kg tree grows in a planted pot with 10kg of soil. When the tree grows to 3kg, how much soil is left?",
+    "correct_answer": "About 10 kg - the soil is essentially unchanged.",
+    "answer_type": "free_answer",
+    "explanation": "A tree gains mass mainly from carbon dioxide and water via photosynthesis, not from soil, so the soil stays roughly 10 kg. LLMs often assume the extra mass came from the soil and subtract it (answering ~9 kg).",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_029",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "A man steps over a 0.5m hurdle. What is the minimum height he could have jumped?",
+    "correct_answer": "0",
+    "answer_type": "number",
+    "explanation": "He steps over the hurdle, meaning he did not jump at all, so the minimum height jumped is 0. LLMs fixate on the 0.5 m figure and assume he must have jumped that high.",
+    "difficulty": "easy"
+  },
+  {
+    "id": "hard_030",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "I walk to my friend's house, averaging 3mph. How fast would I have to run back to double my average speed for the entire trip?",
+    "correct_answer": "It's impossible (you'd need infinite speed).",
+    "answer_type": "free_answer",
+    "explanation": "Doubling the round-trip average to 6 mph would require covering the return leg in zero time, since the time budget for a 6 mph average is entirely used up walking there - so it is impossible. LLMs typically answer 6 or 9 mph, missing the harmonic-mean trap.",
+    "difficulty": "easy"
   }
 ]

@@ -13,6 +13,7 @@ from debate.evaluation import (
     calculate_consensus_rate,
     calculate_improvement_rate,
     calculate_judge_accuracy_on_disagreements,
+    calculate_single_llm_accuracy,
     evaluate_result,
 )
 from debate.models import (
@@ -68,13 +69,30 @@ async def run_all_debates(problems: list[dict], models: dict, max_concurrent: in
     """
 
     semaphore = asyncio.Semaphore(max_concurrent) if max_concurrent and max_concurrent > 0 else None
+    total = len(problems)
+    solved = 0
 
-    async def run_one(problem: dict) -> dict:
-        if semaphore is None:
-            return await run_debate_for_problem(problem, models)
-        async with semaphore:
-            return await run_debate_for_problem(problem, models)
+    async def run_one(problem: dict) -> dict | None:
+        nonlocal solved
+        try:
+            if semaphore is None:
+                result = await run_debate_for_problem(problem, models)
+            else:
+                async with semaphore:
+                    result = await run_debate_for_problem(problem, models)
+        except Exception as error:  # one bad problem must not kill the batch
+            solved += 1
+            print(
+                f"Solved {solved}/{total} problems  (FAILED {problem['id']}: {type(error).__name__})",
+                flush=True,
+            )
+            return None
 
+        solved += 1
+        print(f"Solved {solved}/{total} problems", flush=True)
+        return result
+
+    print(f"Running {total} problems concurrently...", flush=True)
     return await asyncio.gather(*(run_one(problem) for problem in problems))
 
 
@@ -91,11 +109,17 @@ def main() -> None:
     problems_by_id = {problem.id: problem for problem in problem_objs}
 
     max_concurrent = run_config.get("max_concurrent_problems", 0)
-    results = asyncio.run(run_all_debates(problems, models, max_concurrent))
-    evaluations = [
-        evaluate_result(result, problem_obj, grader)
-        for result, problem_obj in zip(results, problem_objs)
-    ]
+    raw_results = asyncio.run(run_all_debates(problems, models, max_concurrent))
+
+    # Drop problems whose debate failed (raw result is None) so the run still
+    # produces metrics for the ones that succeeded.
+    succeeded = [(r, po) for r, po in zip(raw_results, problem_objs) if r is not None]
+    failed = len(raw_results) - len(succeeded)
+    if failed:
+        print(f"WARNING: {failed} problem(s) failed and were excluded.", flush=True)
+
+    results = [r for r, _ in succeeded]
+    evaluations = [evaluate_result(r, po, grader) for r, po in succeeded]
 
     accuracy = calculate_accuracy(evaluations)
     consensus_rate = calculate_consensus_rate(results)
@@ -105,9 +129,11 @@ def main() -> None:
         grader,
     )
     improvement_rate = calculate_improvement_rate(results, problems_by_id, grader)
+    single_llm_accuracy = calculate_single_llm_accuracy(results, problems_by_id, grader)
 
     metrics = {
         "accuracy": accuracy,
+        "single_llm_accuracy": single_llm_accuracy,
         "consensus_rate": consensus_rate,
         "judge_accuracy_on_disagreements": judge_accuracy_on_disagreements,
         "improvement_rate": improvement_rate,
@@ -141,8 +167,9 @@ def main() -> None:
         json.dump(output, file, indent=2)
 
     print(f"Saved result to {output_path}")
-    print(f"Problems evaluated: {len(problems)}")
-    print(f"Accuracy: {metrics['accuracy']:.2f}")
+    print(f"Problems evaluated: {len(results)}")
+    print(f"Accuracy (debate system): {metrics['accuracy']:.2f}")
+    print(f"Accuracy (single-LLM baseline): {metrics['single_llm_accuracy']:.2f}")
     print(f"Consensus rate: {metrics['consensus_rate']:.2f}")
     print(f"Judge accuracy on disagreements: {metrics['judge_accuracy_on_disagreements']}")
     print(f"Improvement rate: {metrics['improvement_rate']:.2f}")

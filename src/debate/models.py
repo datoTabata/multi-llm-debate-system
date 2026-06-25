@@ -5,6 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from openrouter import OpenRouter
+from pydantic import ValidationError
 
 CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "models.toml"
 
@@ -68,19 +69,31 @@ class OpenRouterClient:
         result = self._client().chat.send(**self._send_kwargs(prompt))
         return result.choices[0].message.content
 
-    def generate_structured(self, prompt: str, response_format):
-        result = self._client().chat.send(**self._send_kwargs(prompt, response_format))
-        return self._parse_structured(result, response_format)
+    def generate_structured(self, prompt: str, response_format, retries: int = 3):
+        last_error = None
+        for _ in range(retries):
+            try:
+                result = self._client().chat.send(**self._send_kwargs(prompt, response_format))
+                return self._parse_structured(result, response_format)
+            except (ValidationError, RuntimeError, ValueError) as error:
+                last_error = error
+        raise last_error
 
     async def agenerate(self, prompt: str) -> str:
         result = await self._client().chat.send_async(**self._send_kwargs(prompt))
         return result.choices[0].message.content
 
-    async def agenerate_structured(self, prompt: str, response_format):
-        result = await self._client().chat.send_async(
-            **self._send_kwargs(prompt, response_format)
-        )
-        return self._parse_structured(result, response_format)
+    async def agenerate_structured(self, prompt: str, response_format, retries: int = 3):
+        last_error = None
+        for _ in range(retries):
+            try:
+                result = await self._client().chat.send_async(
+                    **self._send_kwargs(prompt, response_format)
+                )
+                return self._parse_structured(result, response_format)
+            except (ValidationError, RuntimeError, ValueError) as error:
+                last_error = error
+        raise last_error
 
 
 def create_grader_client(config: dict | None = None) -> OpenRouterClient:

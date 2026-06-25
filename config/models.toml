@@ -17,7 +17,7 @@ dataset = "llm_hard_problems.json"  # which file under data/ to load
 problem_ids = []             # e.g. ["math_001", "game_001"]
 problem_limit = 0            # how many random problems to run; 0 (or remove) = all
 seed = 0
-max_concurrent_problems = 0  # 0 = run all problems at once; set a cap to throttle
+max_concurrent_problems = 10  # 0 = all at once; 29-at-once overwhelms providers (truncated responses), so cap the in-flight problems
 output_file = "hard_result.json"
 
 [defaults]

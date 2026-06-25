@@ -21,8 +21,9 @@ LLM and majority-vote baselines on a 25-problem dataset. Full spec in
 | 2 | Concurrency — async stages + concurrent problems | ✅ done |
 | 3 | System metrics (accuracy, consensus, judge-acc, improvement) | ✅ done |
 | 3 | Type-aware answer checking (number / MC / free-answer + LLM grader) | ✅ done |
-| 3 | **Baselines** (single-LLM, majority vote) | ❌ missing |
-| 3 | Comparison plot (system vs baselines) | ⚠️ partial — only system metrics plotted |
+| 3 | Single-LLM baseline (solo solver accuracy) | ✅ done |
+| 3 | Majority-vote baseline | ❌ missing |
+| 3 | Comparison plot (system vs single-LLM) | ✅ done |
 
 ## How it runs (no env vars)
 Everything is driven by **`config/models.toml`**:
@@ -59,9 +60,14 @@ python scripts/plot_metrics.py    # plots metrics for the latest run (reads outp
 
 ## Datasets
 - `data/problems.json` — the 25-problem assignment dataset.
-- `data/llm_hard_problems.json` — 9 "easy for humans, hard for LLMs" overfitting
-  traps (horses, Monty-Hall-variant, river crossing, etc.). System scored 0.67
-  on these; see `outputs/hard_result.json`.
+- `data/llm_hard_problems.json` — the full 29-question "Easy Problems That LLMs
+  Get Wrong" benchmark (arXiv 2405.19616), `hard_001..030` minus the deferred
+  Q8 (Bible sentence). Overfitting traps: horses, Monty-Hall-variant, river
+  crossing, Sally's sisters, LOLLAPALOOZA, etc.
+
+**Latest result (29 hard problems):** debate **0.69** vs single-LLM baseline
+**0.57** (+12 pts); judge resolves disagreements at 0.65. See
+`outputs/hard_result.json` / `outputs/hard_result_plot.png`.
 
 ## How answers are checked
 Each problem has an `answer_type`:
@@ -88,8 +94,12 @@ falls back to a string match.
 - `scripts/plot_metrics.py` — plot generator (reads config `output_file`).
 
 ## Known issues / TODO
-- **Baselines not implemented** (required deliverable) — single-LLM and majority
-  vote. Data already exists in each result; no new API calls needed.
+- **Majority-vote baseline** still missing (single-LLM is done via
+  `calculate_single_llm_accuracy`). Computable from existing independent
+  solutions; no new debate calls needed.
+- **Brittle number grading** — e.g. `hard_029` model answered "0.1-0.2 m (or ~0
+  m theoretically)"; `_to_number` grabbed 0.1 and marked it wrong. Hedged ranges
+  on number-type problems can misgrade.
 - ~~Answer matching is brittle~~ — fixed: now type-aware via `Problem.check`
   (number / multiple_choice / free_answer + LLM grader). See [`../notes.md`](../notes.md).
 - **Peer reviews are unstructured** — `generate_peer_reviews` uses `.generate()`
@@ -99,6 +109,13 @@ falls back to a string match.
   re-parses them downstream).
 
 ## Recent changes
+- **2026-06-26** — Single-LLM baseline (`calculate_single_llm_accuracy`): grades
+  each solver's independent pre-debate answer; reported next to system accuracy
+  and plotted. On the 29 hard problems: 0.69 (debate) vs 0.57 (single LLM).
+- **2026-06-26** — Completed the LLM-hard dataset to the full 29 (added Q11–Q30
+  from arXiv 2405.19616). Run robustness: structured calls retry 3x on
+  malformed/truncated responses; per-problem failures are isolated (one bad
+  problem no longer kills the batch); progress log prints `Solved N/total`.
 - **2026-06-26** — Async pipeline + concurrency. Every stage fans out its
   independent calls via `asyncio.gather`; problems run concurrently in
   `run_all_debates` (capped by `max_concurrent_problems`). Added `agenerate` /

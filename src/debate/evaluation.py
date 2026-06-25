@@ -65,6 +65,37 @@ def calculate_accuracy(evaluations: list[dict]) -> float:
     return correct_count / len(evaluations)
 
 
+def calculate_single_llm_accuracy(
+    results: list[dict],
+    problems_by_id: dict,
+    grader=None,
+) -> float:
+    """Single-LLM baseline: accuracy of each solver's INDEPENDENT (pre-debate)
+    answer, averaged over all solo attempts.
+
+    This is the "one model solving alone" baseline the debate is measured
+    against. It reuses the independent solutions already in each result, so it
+    needs no extra debate calls (only grader calls for free-answer problems).
+    """
+
+    total = 0
+    correct = 0
+
+    for result in results:
+        problem = problems_by_id[result["problem_id"]]
+
+        for solution in result["solutions"].values():
+            answer = extract_initial_answer(solution)
+            total += 1
+            if problem.check(answer, grader):
+                correct += 1
+
+    if total == 0:
+        return 0.0
+
+    return correct / total
+
+
 def get_solver_refined_answers(result: dict) -> dict[str, str]:
     """Extract refined answers for all solvers in one result."""
 
