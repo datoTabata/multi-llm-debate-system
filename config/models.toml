@@ -1,0 +1,28 @@
+# Model configuration for the OpenRouter provider.
+#
+# The API key is NOT here -- it stays in .env as OPEN_ROUTER_KEY (it is a secret).
+# This file only chooses WHICH models fill the four participant slots.
+#
+# Roles (3 solvers + 1 judge) are still assigned dynamically at runtime by the
+# Stage 0 / 0.5 confidence algorithm. This file just defines the pool of four.
+
+# Run settings (previously the PROBLEM_LIMIT / OUTPUT_FILE env vars).
+[run]
+problem_limit = 1            # how many problems to run; set to 0 (or remove) for all
+output_file = "demo_result.json"
+
+[defaults]
+temperature = 0.7
+
+[participants.model_a]
+model = "openai/gpt-4o-mini"
+
+[participants.model_b]
+model = "anthropic/claude-haiku-4.5"
+
+[participants.model_c]
+model = "google/gemini-2.5-flash"
+
+[participants.model_d]
+model = "x-ai/grok-4.3"
+temperature = 0.3

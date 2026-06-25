@@ -1,137 +1,80 @@
 import os
+import tomllib
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openrouter import OpenRouter
+
+CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "models.toml"
 
 
-class ModelClient:
-    """Base interface for all model clients."""
+def load_config(path: str | None = None) -> dict:
+    """Load the TOML configuration file (models + run settings)."""
 
-    name: str
+    config_path = Path(path) if path else CONFIG_PATH
 
-    def generate(self, prompt: str) -> str:
-        raise NotImplementedError
-
-    def generate_structured(self, prompt: str, response_format):
-        raise NotImplementedError
-
-
-@dataclass
-class MockClient(ModelClient):
-    """Simple model client used for local testing."""
-
-    name: str
-
-    def generate(self, prompt: str) -> str:
-        prompt_lower = prompt.lower()
-
-        if "solver or judge" in prompt_lower:
-            if self.name == "model_d":
-                return (
-                    '{"preferred_role": "Judge", '
-                    '"solver_confidence": 0.6, '
-                    '"judge_confidence": 0.9, '
-                    '"reasoning": "This model is better suited for evaluating competing solutions."}'
-                )
-
-            return (
-                '{"preferred_role": "Solver", '
-                '"solver_confidence": 0.8, '
-                '"judge_confidence": 0.6, '
-                '"reasoning": "This model is better suited for solution generation."}'
-            )
-
-        if "solve the following problem independently" in prompt_lower:
-            return (
-                '{"reasoning": "This is an initial mock solution.", '
-                '"answer": "5", '
-                '"confidence": 0.65}'
-            )
-
-        if "review the following solution" in prompt_lower:
-            return (
-                '{"strengths": ["The solution gives a clear final answer."], '
-                '"weaknesses": ["The reasoning should show more verification."], '
-                '"possible_errors": [], '
-                '"suggested_changes": ["Add a short check of the final answer."], '
-                '"overall_assessment": "reasonable"}'
-            )
-
-        if "refine your solution" in prompt_lower:
-            return (
-                '{"changes_made": ['
-                '{"critique": "The reasoning should show more verification.", '
-                '"response": "Added a verification step.", '
-                '"accepted": true}'
-                '], '
-                '"refined_solution": "The solution was checked and refined using peer feedback.", '
-                '"refined_answer": "4", '
-                '"confidence": 0.85}'
-            )
-
-        if "judge the final solutions" in prompt_lower:
-            return (
-                '{"winner": "solver_1", '
-                '"confidence": 0.8, '
-                '"reasoning": "Solver 1 provided the clearest refined answer."}'
-            )
-
-        return "Mock response"
-
-    def generate_structured(self, prompt: str, response_format):
-        response = self.generate(prompt)
-        return response_format.model_validate_json(response)
+    with config_path.open("rb") as file:
+        return tomllib.load(file)
 
 
 @dataclass
-class OpenAIClient(ModelClient):
-    """OpenAI model client."""
+class OpenRouterClient:
+    """Thin wrapper over the official OpenRouter SDK.
+
+    Holds the per-slot config (model + temperature) and centralizes the two
+    call shapes the pipeline needs: plain text and schema-validated JSON.
+    """
 
     name: str
     model_name: str
+    temperature: float = 0.7
+
+    def _client(self) -> OpenRouter:
+        return OpenRouter(api_key=os.getenv("OPEN_ROUTER_KEY"))
 
     def generate(self, prompt: str) -> str:
-        client = OpenAI()
-
-        response = client.responses.create(
+        result = self._client().chat.send(
             model=self.model_name,
-            input=prompt,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
         )
 
-        return response.output_text
+        return result.choices[0].message.content
 
     def generate_structured(self, prompt: str, response_format):
-        client = OpenAI()
-
-        response = client.responses.parse(
+        result = self._client().chat.send(
             model=self.model_name,
-            input=prompt,
-            text_format=response_format,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": response_format.__name__,
+                    "schema_": response_format.model_json_schema(),
+                },
+            },
         )
 
-        return response.output_parsed
+        return response_format.model_validate_json(result.choices[0].message.content)
 
 
-def create_model_clients() -> dict[str, ModelClient]:
-    """Create the four model clients used in one debate run."""
+def create_model_clients(config: dict | None = None) -> dict[str, OpenRouterClient]:
+    """Create the four OpenRouter clients used in one debate run."""
 
     load_dotenv()
 
-    provider = os.getenv("MODEL_PROVIDER", "mock")
-    model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    if config is None:
+        config = load_config()
 
-    if provider == "openai":
-        return {
-            "model_a": OpenAIClient("model_a", model_name),
-            "model_b": OpenAIClient("model_b", model_name),
-            "model_c": OpenAIClient("model_c", model_name),
-            "model_d": OpenAIClient("model_d", model_name),
-        }
+    default_temperature = config.get("defaults", {}).get("temperature", 0.7)
 
-    return {
-        "model_a": MockClient("model_a"),
-        "model_b": MockClient("model_b"),
-        "model_c": MockClient("model_c"),
-        "model_d": MockClient("model_d"),
-    }
+    clients = {}
+    for slot, spec in config["participants"].items():
+        clients[slot] = OpenRouterClient(
+            name=slot,
+            model_name=spec["model"],
+            temperature=spec.get("temperature", default_temperature),
+        )
+
+    return clients

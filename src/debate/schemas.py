@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class JudgeResponse(BaseModel):
     winner: Literal["solver_1", "solver_2", "solver_3"]
-    confidence: float = Field(ge=0, le=1)
+    confidence: float
     reasoning: str
 
 
@@ -21,7 +21,7 @@ class RefinementResponse(BaseModel):
     refined_answer: str = Field(
         description="Only the final answer, with no explanation, no Markdown, and no full sentence. Examples: '4', '1/6', '6 N'."
     )
-    confidence: float = Field(ge=0, le=1)
+    confidence: float
 
 
 class SolutionResponse(BaseModel):
@@ -29,11 +29,11 @@ class SolutionResponse(BaseModel):
     answer: str = Field(
         description="Only the final answer, with no explanation, no Markdown, and no full sentence. Examples: '4', '1/6', '6 N'."
     )
-    confidence: float = Field(ge=0, le=1)
+    confidence: float
 
 
 class RolePreferenceResponse(BaseModel):
     preferred_role: Literal["Solver", "Judge"]
-    solver_confidence: float = Field(ge=0, le=1)
-    judge_confidence: float = Field(ge=0, le=1)
+    solver_confidence: float
+    judge_confidence: float
     reasoning: str

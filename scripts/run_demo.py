@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -14,7 +13,7 @@ from debate.evaluation import (
     calculate_judge_accuracy_on_disagreements,
     evaluate_result,
 )
-from debate.models import create_model_clients
+from debate.models import create_model_clients, load_config
 from debate.pipeline import run_debate_for_problem
 
 
@@ -28,10 +27,13 @@ def load_problems() -> list[dict]:
 
 
 def main() -> None:
+    config = load_config()
+    run_config = config.get("run", {})
+
     problems = load_problems()
-    problem_limit = int(os.getenv("PROBLEM_LIMIT", len(problems)))
+    problem_limit = run_config.get("problem_limit") or len(problems)
     problems = problems[:problem_limit]
-    models = create_model_clients()
+    models = create_model_clients(config)
 
     results = []
     evaluations = []
@@ -59,7 +61,7 @@ def main() -> None:
         "improvement_rate": improvement_rate,
     }
 
-    output_file = os.getenv("OUTPUT_FILE", "demo_result.json")
+    output_file = run_config.get("output_file", "demo_result.json")
     output_path = PROJECT_ROOT / "outputs" / output_file
     output_path.parent.mkdir(exist_ok=True)
 
