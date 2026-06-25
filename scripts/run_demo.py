@@ -65,7 +65,20 @@ def main() -> None:
     output_path = PROJECT_ROOT / "outputs" / output_file
     output_path.parent.mkdir(exist_ok=True)
 
+    participants_config = {
+        slot: {
+            "model": client.model_name,
+            "temperature": client.temperature,
+            "max_tokens": client.max_tokens,
+        }
+        for slot, client in models.items()
+    }
+
     output = {
+        "config": {
+            "participants": participants_config,
+            "problem_limit": problem_limit,
+        },
         "results": results,
         "evaluations": evaluations,
         "metrics": metrics,

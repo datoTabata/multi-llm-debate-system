@@ -26,8 +26,13 @@ LLM and majority-vote baselines on a 25-problem dataset. Full spec in
 Everything is driven by **`config/models.toml`**:
 - `[participants.model_a..d]` — which model fills each slot (current mix:
   gpt-4o-mini, claude-haiku-4.5, gemini-2.5-flash, grok-4.3).
+- `[defaults]` — `temperature`, `max_tokens` (now 40000; per-slot overridable).
 - `[run]` — `problem_limit`, `output_file`.
 - API key lives in `.env` as `OPEN_ROUTER_KEY` (gitignored).
+
+The run output (`outputs/<output_file>`) now includes a top-level `config` block
+recording each participant's model/temperature/max_tokens and the problem_limit,
+so every result is self-describing.
 
 ```bash
 python scripts/run_demo.py        # runs the debate, writes outputs/<output_file>
@@ -55,6 +60,16 @@ python scripts/plot_metrics.py    # plots metrics from outputs/demo_result.json
   re-parses them downstream).
 
 ## Recent changes
+- **2026-06-26** — Picker round is now self-aware: each model is told its own
+  OpenRouter id, the named peer roster, the debate flow, the current date, and a
+  knowledge-cutoff warning (`build_role_preference_prompt` in `prompts.py`).
+  Review/judge rounds stay **anonymized** on purpose (avoid brand bias).
+- **2026-06-26** — Fixed truncated-JSON crash: `max_tokens` was unset (provider
+  default) so long solver reasoning got cut mid-JSON. Added `max_tokens` to
+  `OpenRouterClient` (config-driven, default 40000) + a clear `finish_reason ==
+  "length"` guard instead of a cryptic Pydantic error.
+- **2026-06-26** — Run output now carries a `config` block (models, temperatures,
+  max_tokens, problem_limit) derived from the live clients.
 - **2026-06-26** — Switched to OpenRouter as the single provider (removed the
   mock/openai/gemini abstraction) and made runs config-driven via
   `config/models.toml`. Simplified schemas (dropped confidence bounds).

@@ -29,6 +29,7 @@ class OpenRouterClient:
     name: str
     model_name: str
     temperature: float = 0.7
+    max_tokens: int = 4000
 
     def _client(self) -> OpenRouter:
         return OpenRouter(api_key=os.getenv("OPEN_ROUTER_KEY"))
@@ -38,6 +39,7 @@ class OpenRouterClient:
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
+            max_tokens=self.max_tokens,
         )
 
         return result.choices[0].message.content
@@ -47,6 +49,7 @@ class OpenRouterClient:
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
+            max_tokens=self.max_tokens,
             response_format={
                 "type": "json_schema",
                 "json_schema": {
@@ -56,7 +59,16 @@ class OpenRouterClient:
             },
         )
 
-        return response_format.model_validate_json(result.choices[0].message.content)
+        choice = result.choices[0]
+        content = choice.message.content
+
+        if choice.finish_reason == "length":
+            raise RuntimeError(
+                f"{self.model_name} response was truncated at max_tokens="
+                f"{self.max_tokens}; raise max_tokens in config/models.toml."
+            )
+
+        return response_format.model_validate_json(content)
 
 
 def create_model_clients(config: dict | None = None) -> dict[str, OpenRouterClient]:
@@ -67,7 +79,9 @@ def create_model_clients(config: dict | None = None) -> dict[str, OpenRouterClie
     if config is None:
         config = load_config()
 
-    default_temperature = config.get("defaults", {}).get("temperature", 0.7)
+    defaults = config.get("defaults", {})
+    default_temperature = defaults.get("temperature", 0.7)
+    default_max_tokens = defaults.get("max_tokens", 4000)
 
     clients = {}
     for slot, spec in config["participants"].items():
@@ -75,6 +89,7 @@ def create_model_clients(config: dict | None = None) -> dict[str, OpenRouterClie
             name=slot,
             model_name=spec["model"],
             temperature=spec.get("temperature", default_temperature),
+            max_tokens=spec.get("max_tokens", default_max_tokens),
         )
 
     return clients

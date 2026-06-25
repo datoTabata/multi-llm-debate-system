@@ -21,7 +21,8 @@ def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
     preferences = {}
 
     for model_name, model in models.items():
-        prompt = build_role_preference_prompt(problem)
+        peers = [other.model_name for slot, other in models.items() if slot != model_name]
+        prompt = build_role_preference_prompt(problem, model.model_name, peers)
         preference = model.generate_structured(prompt, RolePreferenceResponse)
         preferences[model_name] = preference.model_dump_json()
 

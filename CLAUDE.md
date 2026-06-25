@@ -17,3 +17,6 @@
 When you finish a meaningful change, **update `work/index.md`**: bump its
 "Last updated" date, adjust the status, and add/repoint any links. Keep it short
 and current — it is the first thing the next session reads.
+
+**Before committing**, always update `work/index.md` first so the index never
+lags behind the code being committed.

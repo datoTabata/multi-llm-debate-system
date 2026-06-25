@@ -1,13 +1,45 @@
-def build_role_preference_prompt(problem: dict) -> str:
-    """Build a prompt for role preference selection."""
+from datetime import date
+
+
+def build_role_preference_prompt(
+    problem: dict,
+    model_identity: str,
+    peers: list[str] | None = None,
+    today: str | None = None,
+) -> str:
+    """Build a prompt for role preference selection.
+
+    `model_identity` is the model's own OpenRouter id (e.g.
+    "anthropic/claude-haiku-4.5") and `peers` are the other models' ids, so it
+    can reason about its own likely strengths relative to the named roster.
+    """
+
+    today = today or date.today().isoformat()
+    peer_list = "\n".join(f"- {peer}" for peer in peers) if peers else "- (unknown)"
 
     return f"""
-You are participating in a collaborative debate system.
+You are the model "{model_identity}", taking part in a collaborative debate
+system alongside three other models, each from a different provider.
+
+The other participants in this debate are:
+{peer_list}
+
+How the debate works: all four models first pick whether they want to Solve or
+Judge. Three become Solvers and answer the problem independently; one becomes the
+Judge. Solvers then peer-review each other, refine their answers, and finally the
+Judge picks the best refined answer.
+
+Today's date is {today}. Your training knowledge has a cutoff in the past, so
+newer and more capable models may have been released since then that you are
+unaware of. Do not assume you are the newest or strongest model in the group.
 
 Problem:
 {problem["question"]}
 
-Choose whether you would be better as a Solver or Judge for this problem.
+Reason about your own likely strengths and weaknesses as "{model_identity}" on
+this specific kind of problem, relative to the named peer models above, and
+choose whether you would be more useful as a Solver or as the Judge.
+
 Return your answer with:
 - preferred role
 - confidence
