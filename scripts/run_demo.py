@@ -59,7 +59,8 @@ def main() -> None:
         "improvement_rate": improvement_rate,
     }
 
-    output_path = PROJECT_ROOT / "outputs" / "demo_result.json"
+    output_file = os.getenv("OUTPUT_FILE", "demo_result.json")
+    output_path = PROJECT_ROOT / "outputs" / output_file
     output_path.parent.mkdir(exist_ok=True)
 
     output = {

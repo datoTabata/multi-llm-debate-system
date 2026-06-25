@@ -7,7 +7,13 @@ from debate.prompts import (
     build_role_preference_prompt,
     build_solver_prompt,
 )
-from debate.schemas import JudgeResponse, RefinementResponse
+from debate.schemas import (
+    JudgeResponse,
+    RefinementResponse,
+    RolePreferenceResponse,
+    SolutionResponse,
+)
+
 
 def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
     """Collect role preferences from every model."""
@@ -16,7 +22,8 @@ def collect_role_preferences(problem: dict, models: dict) -> dict[str, str]:
 
     for model_name, model in models.items():
         prompt = build_role_preference_prompt(problem)
-        preferences[model_name] = model.generate(prompt)
+        preference = model.generate_structured(prompt, RolePreferenceResponse)
+        preferences[model_name] = preference.model_dump_json()
 
     return preferences
 
@@ -34,7 +41,8 @@ def generate_independent_solutions(
         model_name = roles[solver_id]
         model = models[model_name]
         prompt = build_solver_prompt(problem)
-        solutions[solver_id] = model.generate(prompt)
+        solution = model.generate_structured(prompt, SolutionResponse)
+        solutions[solver_id] = solution.model_dump_json()
 
     return solutions
 

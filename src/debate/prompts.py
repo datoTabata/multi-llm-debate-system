@@ -12,6 +12,10 @@ Return your answer with:
 - preferred role
 - confidence
 - short reasoning
+
+Important:
+preferred_role must be exactly "Solver" or "Judge".
+solver_confidence and judge_confidence must be numbers between 0 and 1.
 """
 
 
@@ -28,6 +32,11 @@ Return:
 - step-by-step reasoning
 - final answer
 - confidence
+
+Important:
+The answer field must contain only the final answer.
+Do not include explanation, Markdown, or a full sentence in answer.
+For example, use "4" instead of "The answer is 4."
 """
 
 
