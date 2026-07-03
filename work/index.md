@@ -77,6 +77,14 @@ editable.
 **0.57** (+12 pts); judge resolves disagreements at 0.65. See
 `outputs/hard_result.json` / `outputs/hard_result_plot.png`.
 
+**Strong-vs-weak experiment (2026-07-03):** 1 strong model
+(gemini-3-flash-preview) + 3 weak (gpt-4o-mini, gemma-3-27b-it,
+llama-3.1-8b-instruct) on 5 problems incl. new `hard_031` (car-wash trap).
+Debate 0.20 vs single-LLM 0.00. The strong model self-selected as judge every
+time; when all three weak solvers converge on the same wrong answer (e.g. all
+said "walk" on the car-wash problem) the judge cannot recover — it can only
+pick among solver answers. See `outputs/gemini3_strong_vs_weak.json`.
+
 ## How answers are checked
 Each problem has an `answer_type`:
 - `number` — numeric compare (units stripped, fractions handled, rel-tol 1e-3).
@@ -122,6 +130,16 @@ falls back to a string match.
   in `run_demo.py` via `model_dump()`.
 
 ## Recent changes
+- **2026-07-03** — Strong-vs-weak run + robustness fixes: added `hard_031`
+  (car-wash trap) to `data/llm_hard_problems.json` (now 30 problems);
+  `OpenRouterClient` gained a 300s `request_timeout` (`asyncio.wait_for` — the
+  SDK has none, and CLOSE_WAIT connections hung a run forever) and retries now
+  also cover `TimeoutError` + `httpx.HTTPError` (`agenerate` retries too);
+  grader prompt hardened (reference answer is ground truth — the grader
+  previously re-solved trap problems itself and misgraded correct answers).
+  Model notes: `ministral-8b` ignores JSON schemas; `gpt-4.1-nano` intermittently
+  routes to endpoints requiring strict schemas (`additionalProperties: false`)
+  which pydantic's `model_json_schema()` doesn't emit — both unusable as-is.
 - **2026-07-03** — Code review fixes: `GraderConfig` restores grader defaults
   (temp 0.0 / gemini model) when `[grader]` is partial; grader results are
   memoized (11 → 3 LLM calls per free-answer problem across metrics);

@@ -259,5 +259,14 @@
     "answer_type": "free_answer",
     "explanation": "Doubling the round-trip average to 6 mph would require covering the return leg in zero time, since the time budget for a 6 mph average is entirely used up walking there - so it is impossible. LLMs typically answer 6 or 9 mph, missing the harmonic-mean trap.",
     "difficulty": "easy"
+  },
+  {
+    "id": "hard_031",
+    "category": "Easy for humans, hard for LLMs",
+    "question": "I want to wash my car at the car wash garage. My car and I are both at home, and the garage is only 100 meters from my home. Should I drive or walk to the garage?",
+    "correct_answer": "Drive - the car has to be at the garage to get washed, so you must take it with you.",
+    "answer_type": "free_answer",
+    "explanation": "The car itself is the thing being washed, so it must be brought to the garage - walking there alone leaves the car at home. LLMs often pattern-match to 'short distance = walk' advice (health, environment) and miss that walking defeats the entire purpose of the trip.",
+    "difficulty": "easy"
   }
 ]
