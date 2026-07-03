@@ -130,6 +130,13 @@ falls back to a string match.
   in `run_demo.py` via `model_dump()`.
 
 ## Recent changes
+- **2026-07-03** — HTML results dashboard (`scripts/build_dashboard.py`):
+  renders a run into `outputs/<run>_dashboard.html` (headline, metric tiles,
+  per-problem grid, and a drill-down of one problem's full pipeline — role
+  selection → round 1 → peer review → round 2 → judgment). The featured
+  problem is auto-selected (correct + solver disagreement + a flip). `run_demo.py`
+  generates it automatically after each run. Reviewed/iterated via the `lavish`
+  skill (browser annotation loop); `.lavish/` is scratch (gitignored).
 - **2026-07-03** — Strong-vs-weak run + robustness fixes: added `hard_031`
   (car-wash trap) to `data/llm_hard_problems.json` (now 30 problems);
   `OpenRouterClient` gained a 300s `request_timeout` (`asyncio.wait_for` — the

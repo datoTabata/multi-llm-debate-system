@@ -3,6 +3,7 @@ import json
 import random
 from pathlib import Path
 
+from build_dashboard import build as build_dashboard
 from debate.evaluation import (
     calculate_accuracy,
     calculate_consensus_rate,
@@ -158,7 +159,11 @@ def main() -> None:
     with output_path.open("w", encoding="utf-8") as file:
         json.dump(output, file, indent=2)
 
+    # Auto-generate the HTML dashboard for this run, next to the JSON.
+    dashboard_path = build_dashboard(output_path)
+
     print(f"Saved result to {output_path}")
+    print(f"Saved dashboard to {dashboard_path}")
     print(f"Problems evaluated: {len(results)}")
     print(f"Accuracy (debate system): {metrics.accuracy:.2f}")
     print(f"Accuracy (single-LLM baseline): {metrics.single_llm_accuracy:.2f}")

@@ -30,3 +30,5 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM"]
 # matplotlib env vars (cache dir, headless backend) must be set BEFORE
 # importing matplotlib, so imports can't all sit at the top.
 "scripts/plot_metrics.py" = ["E402"]
+# HTML-template generator: long inline markup lines don't wrap cleanly.
+"scripts/build_dashboard.py" = ["E501"]
