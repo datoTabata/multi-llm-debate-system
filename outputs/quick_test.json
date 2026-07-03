@@ -1,0 +1,59 @@
+{
+  "results": [
+    {
+      "problem_id": "math_001",
+      "role_preferences": {
+        "model_a": "{\"preferred_role\":\"Solver\",\"solver_confidence\":0.8,\"judge_confidence\":0.6,\"reasoning\":\"This model is better suited for solution generation.\"}",
+        "model_b": "{\"preferred_role\":\"Solver\",\"solver_confidence\":0.8,\"judge_confidence\":0.6,\"reasoning\":\"This model is better suited for solution generation.\"}",
+        "model_c": "{\"preferred_role\":\"Solver\",\"solver_confidence\":0.8,\"judge_confidence\":0.6,\"reasoning\":\"This model is better suited for solution generation.\"}",
+        "model_d": "{\"preferred_role\":\"Judge\",\"solver_confidence\":0.6,\"judge_confidence\":0.9,\"reasoning\":\"This model is better suited for evaluating competing solutions.\"}"
+      },
+      "roles": {
+        "solver_1": "model_a",
+        "solver_2": "model_b",
+        "solver_3": "model_c",
+        "judge": "model_d"
+      },
+      "solutions": {
+        "solver_1": "{\"reasoning\":\"This is an initial mock solution.\",\"answer\":\"5\",\"confidence\":0.65}",
+        "solver_2": "{\"reasoning\":\"This is an initial mock solution.\",\"answer\":\"5\",\"confidence\":0.65}",
+        "solver_3": "{\"reasoning\":\"This is an initial mock solution.\",\"answer\":\"5\",\"confidence\":0.65}"
+      },
+      "peer_reviews": {
+        "solver_1": [
+          "{\"strengths\": [\"The solution gives a clear final answer.\"], \"weaknesses\": [\"The reasoning should show more verification.\"], \"possible_errors\": [], \"suggested_changes\": [\"Add a short check of the final answer.\"], \"overall_assessment\": \"reasonable\"}",
+          "{\"strengths\": [\"The solution gives a clear final answer.\"], \"weaknesses\": [\"The reasoning should show more verification.\"], \"possible_errors\": [], \"suggested_changes\": [\"Add a short check of the final answer.\"], \"overall_assessment\": \"reasonable\"}"
+        ],
+        "solver_2": [
+          "{\"strengths\": [\"The solution gives a clear final answer.\"], \"weaknesses\": [\"The reasoning should show more verification.\"], \"possible_errors\": [], \"suggested_changes\": [\"Add a short check of the final answer.\"], \"overall_assessment\": \"reasonable\"}",
+          "{\"strengths\": [\"The solution gives a clear final answer.\"], \"weaknesses\": [\"The reasoning should show more verification.\"], \"possible_errors\": [], \"suggested_changes\": [\"Add a short check of the final answer.\"], \"overall_assessment\": \"reasonable\"}"
+        ],
+        "solver_3": [
+          "{\"strengths\": [\"The solution gives a clear final answer.\"], \"weaknesses\": [\"The reasoning should show more verification.\"], \"possible_errors\": [], \"suggested_changes\": [\"Add a short check of the final answer.\"], \"overall_assessment\": \"reasonable\"}",
+          "{\"strengths\": [\"The solution gives a clear final answer.\"], \"weaknesses\": [\"The reasoning should show more verification.\"], \"possible_errors\": [], \"suggested_changes\": [\"Add a short check of the final answer.\"], \"overall_assessment\": \"reasonable\"}"
+        ]
+      },
+      "refined_solutions": {
+        "solver_1": "{\"changes_made\":[{\"critique\":\"The reasoning should show more verification.\",\"response\":\"Added a verification step.\",\"accepted\":true}],\"refined_solution\":\"The solution was checked and refined using peer feedback.\",\"refined_answer\":\"4\",\"confidence\":0.85}",
+        "solver_2": "{\"changes_made\":[{\"critique\":\"The reasoning should show more verification.\",\"response\":\"Added a verification step.\",\"accepted\":true}],\"refined_solution\":\"The solution was checked and refined using peer feedback.\",\"refined_answer\":\"4\",\"confidence\":0.85}",
+        "solver_3": "{\"changes_made\":[{\"critique\":\"The reasoning should show more verification.\",\"response\":\"Added a verification step.\",\"accepted\":true}],\"refined_solution\":\"The solution was checked and refined using peer feedback.\",\"refined_answer\":\"4\",\"confidence\":0.85}"
+      },
+      "judgment": "{\"winner\":\"solver_1\",\"confidence\":0.8,\"reasoning\":\"Solver 1 provided the clearest refined answer.\"}"
+    }
+  ],
+  "evaluations": [
+    {
+      "problem_id": "math_001",
+      "winner": "solver_1",
+      "predicted_answer": "4",
+      "correct_answer": "4",
+      "is_correct": true
+    }
+  ],
+  "metrics": {
+    "accuracy": 1.0,
+    "consensus_rate": 1.0,
+    "judge_accuracy_on_disagreements": null,
+    "improvement_rate": 1.0
+  }
+}
