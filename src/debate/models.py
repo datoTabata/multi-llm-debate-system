@@ -6,6 +6,7 @@ from functools import cache
 from pathlib import Path
 from typing import TypeVar
 
+import httpx
 from dotenv import load_dotenv
 from openrouter import OpenRouter
 from pydantic import BaseModel, ValidationError
@@ -101,6 +102,9 @@ class OpenRouterClient:
     model_name: str
     temperature: float
     max_tokens: int
+    # Per-request cap: the SDK has no timeout, so a connection the provider
+    # drops (CLOSE_WAIT) would otherwise hang the whole run forever.
+    request_timeout: float = 300.0
 
     def _client(self) -> OpenRouter:
         return OpenRouter(api_key=os.getenv("OPEN_ROUTER_KEY"))
@@ -135,9 +139,20 @@ class OpenRouterClient:
 
         return response_format.model_validate_json(choice.message.content)
 
-    async def agenerate(self, prompt: str) -> str:
-        result = await self._client().chat.send_async(**self._send_kwargs(prompt))
-        return result.choices[0].message.content
+    async def _send(self, **kwargs):
+        return await asyncio.wait_for(
+            self._client().chat.send_async(**kwargs), timeout=self.request_timeout
+        )
+
+    async def agenerate(self, prompt: str, retries: int = 3) -> str:
+        last_error = None
+        for _ in range(retries):
+            try:
+                result = await self._send(**self._send_kwargs(prompt))
+                return result.choices[0].message.content
+            except (TimeoutError, httpx.HTTPError) as error:
+                last_error = error
+        raise last_error
 
     async def agenerate_structured(
         self, prompt: str, response_format: type[ResponseSchema], retries: int = 3
@@ -145,11 +160,15 @@ class OpenRouterClient:
         last_error = None
         for _ in range(retries):
             try:
-                result = await self._client().chat.send_async(
-                    **self._send_kwargs(prompt, response_format)
-                )
+                result = await self._send(**self._send_kwargs(prompt, response_format))
                 return self._parse_structured(result, response_format)
-            except (ValidationError, RuntimeError, ValueError) as error:
+            except (
+                ValidationError,
+                RuntimeError,
+                ValueError,
+                TimeoutError,
+                httpx.HTTPError,
+            ) as error:
                 last_error = error
         raise last_error
 
