@@ -7,3 +7,4 @@ outputs/
 .env
 .DS_Store
 *.egg-info/
+.lavish/
