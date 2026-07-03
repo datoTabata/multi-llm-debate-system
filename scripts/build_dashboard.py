@@ -173,6 +173,7 @@ def select_drilldown_id(data: dict) -> str:
 METRIC_LABELS = {
     "accuracy": ("Debate accuracy", "Judge's chosen answer, graded"),
     "single_llm_accuracy": ("Single-LLM baseline", "Each solver alone, pre-debate"),
+    "majority_vote_accuracy": ("Majority-vote baseline", "Plurality of 3 solvers, pre-debate"),
     "consensus_rate": ("Consensus rate", "All 3 solvers agree after refinement"),
     "judge_accuracy_on_disagreements": ("Judge accuracy", "When solvers disagree"),
     "improvement_rate": ("Improvement rate", "Refinement fixed a wrong answer"),

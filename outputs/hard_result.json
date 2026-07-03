@@ -1454,6 +1454,7 @@
   "metrics": {
     "accuracy": 0.6896551724137931,
     "single_llm_accuracy": 0.5747126436781609,
+    "majority_vote_accuracy": 0.4827586206896552,
     "consensus_rate": 0.3103448275862069,
     "judge_accuracy_on_disagreements": 0.65,
     "improvement_rate": 0.12643678160919541

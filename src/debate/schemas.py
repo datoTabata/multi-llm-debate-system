@@ -82,6 +82,7 @@ class RunMetrics(BaseModel):
 
     accuracy: float
     single_llm_accuracy: float
+    majority_vote_accuracy: float
     consensus_rate: float
     judge_accuracy_on_disagreements: float | None
     improvement_rate: float

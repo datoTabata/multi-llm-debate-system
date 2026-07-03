@@ -1,4 +1,6 @@
-from debate.problem import Grader, Problem
+from collections import Counter
+
+from debate.problem import Grader, Problem, _normalize, _to_number
 from debate.schemas import (
     DebateResult,
     EvaluationRecord,
@@ -70,6 +72,49 @@ def calculate_single_llm_accuracy(
         return 0.0
 
     return correct / total
+
+
+def _vote_key(problem: Problem, answer: str) -> tuple:
+    """Group equivalent answers for majority voting. Numbers vote by parsed
+    value (so '23' and '23.0' agree); everything else by normalized string."""
+    if problem.answer_type == "number":
+        value = _to_number(answer)
+        if value is not None:
+            return ("num", round(value, 6))
+    return ("str", _normalize(answer))
+
+
+def calculate_majority_vote_accuracy(
+    results: list[DebateResult],
+    problems_by_id: dict[str, Problem],
+    grader: Grader | None = None,
+) -> float:
+    """Simple-voting baseline: from the three solvers' INDEPENDENT (pre-debate)
+    answers, pick the majority answer and grade it.
+
+    This is the assignment's second baseline (no refinement, no judge). Ties
+    where all three answers differ fall back to the first solver's answer. Like
+    the single-LLM baseline it reuses answers already in each result, so it
+    needs no extra debate calls.
+    """
+    total = 0
+    correct = 0
+
+    for result in results:
+        problem = problems_by_id[result.problem_id]
+        answers = [s.answer for s in result.solutions.values()]
+
+        counts = Counter(_vote_key(problem, a) for a in answers)
+        winning_key, _ = counts.most_common(1)[0]
+        # Grade a representative answer for the winning group (first in solver
+        # order), so grading stays type-aware even though voting is by key.
+        majority = next(a for a in answers if _vote_key(problem, a) == winning_key)
+
+        total += 1
+        if problem.check(majority, grader):
+            correct += 1
+
+    return correct / total if total else 0.0
 
 
 def get_solver_refined_answers(result: DebateResult) -> dict[str, str]:
