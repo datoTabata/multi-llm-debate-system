@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .idea/
 results/
+outputs/
 .env
 .DS_Store
 *.egg-info/

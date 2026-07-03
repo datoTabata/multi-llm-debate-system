@@ -20,3 +20,7 @@ and current — it is the first thing the next session reads.
 
 **Before committing**, always update `work/index.md` first so the index never
 lags behind the code being committed.
+
+## Git rules
+- **Never add a `Co-Authored-By` / co-authoring trailer to commits or PRs.**
+  Keep commit messages clean with no attribution footer.

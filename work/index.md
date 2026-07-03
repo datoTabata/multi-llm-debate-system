@@ -10,7 +10,7 @@ Three LLMs solve a problem independently, peer-review each other, refine their
 answers, and a fourth LLM judges and returns the best answer. Goal: beat single-
 LLM and majority-vote baselines on a 25-problem dataset. Full spec in
 [`../Assignment.md`](../Assignment.md). User-facing usage in
-[`../README.md`](../README.md) (note: README is somewhat out of date).
+[`../README.md`](../README.md).
 
 ## Current status by phase
 | Phase | Item | Status |
