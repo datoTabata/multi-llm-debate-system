@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -11,14 +10,13 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-from debate.models import load_config
+from debate.models import load_run_config
 
 
 def output_filename() -> str:
     """The result file the last run wrote, per config."""
 
-    return load_config().get("run", {}).get("output_file", "demo_result.json")
+    return load_run_config().output_file
 
 
 def load_data() -> dict:
@@ -35,11 +33,7 @@ def main() -> None:
     metrics = data["metrics"]
     dataset = data.get("config", {}).get("dataset") or output_filename()
 
-    plot_metrics = {
-        key: value
-        for key, value in metrics.items()
-        if value is not None
-    }
+    plot_metrics = {key: value for key, value in metrics.items() if value is not None}
 
     names = list(plot_metrics.keys())
     values = list(plot_metrics.values())
@@ -52,7 +46,7 @@ def main() -> None:
     plt.title(f"Debate System Metrics — {dataset} ({n_problems} problems)")
     plt.xticks(rotation=20, ha="right")
 
-    for bar, value in zip(bars, values):
+    for bar, value in zip(bars, values, strict=True):
         plt.text(bar.get_x() + bar.get_width() / 2, value + 0.02, f"{value:.2f}", ha="center")
 
     plt.tight_layout()

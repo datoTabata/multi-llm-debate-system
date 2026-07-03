@@ -1,6 +1,7 @@
 import math
 import re
-from typing import Callable, Literal, Optional
+from collections.abc import Callable
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -15,7 +16,7 @@ def _normalize(answer: str) -> str:
     return " ".join(str(answer).strip().lower().split())
 
 
-def _to_number(answer: str) -> Optional[float]:
+def _to_number(answer: str) -> float | None:
     """Extract a single numeric value (int, decimal, or a/b fraction).
 
     Tolerates trailing units, e.g. "6 N" -> 6.0, "1/6" -> 0.1666..., so a bare
@@ -49,7 +50,7 @@ class Problem(BaseModel):
     explanation: str = ""
     difficulty: str = ""
 
-    def check(self, predicted: str, grader: Optional[Grader] = None) -> bool:
+    def check(self, predicted: str, grader: Grader | None = None) -> bool:
         """Return whether `predicted` is a correct answer to this problem."""
 
         if self.answer_type == "number":

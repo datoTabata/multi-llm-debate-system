@@ -1,6 +1,6 @@
 # Project Index — Multi-LLM Collaborative Debate System
 
-**Last updated:** 2026-06-26
+**Last updated:** 2026-07-03
 **Due date:** 2026-07-03
 **Staleness check:** If this date trails recent commits or the code clearly
 diverged, trust the code and update this file.
@@ -51,12 +51,20 @@ model calls with `asyncio.gather` (4 role-prefs, 3 solves, 6 reviews, 3 refines)
 stages stay sequential because each depends on the previous. Across problems,
 `run_all_debates` runs every problem concurrently (capped by
 `max_concurrent_problems`). Client async methods: `OpenRouterClient.agenerate` /
-`agenerate_structured` (SDK `chat.send_async`). The grader stays sync.
+`agenerate_structured` (SDK `chat.send_async`) — the client is async-only. The
+grader is a sync callable that wraps `agenerate_structured` in `asyncio.run`
+(only safe outside a running loop; grading happens after the debate loop ends)
+and memoizes results by (question, predicted, correct).
 
 ```bash
+pip install -e .                  # once: install the debate package + deps (pyproject.toml)
 python scripts/run_demo.py        # runs the debate, writes outputs/<output_file>
 python scripts/plot_metrics.py    # plots metrics for the latest run (reads output_file)
+ruff check src scripts && ruff format src scripts   # lint + format
 ```
+Deps/tooling live in `pyproject.toml` (`requirements.txt` is gone). The current
+dev env is the `llm_homeworks` conda env, where the package is installed
+editable.
 
 ## Datasets
 - `data/problems.json` — the 25-problem assignment dataset.
@@ -83,10 +91,12 @@ falls back to a string match.
 
 ## File map
 - `config/models.toml` — models + run settings + `[grader]` (single source of config).
-- `src/debate/models.py` — `OpenRouterClient`, `load_config`, grader factory.
+- `src/debate/models.py` — `OpenRouterClient` (async-only), typed config
+  (`AppConfig`/`RunConfig`/`SlotConfig`), `load_config`, grader factory.
 - `src/debate/problem.py` — `Problem` model + `check()` (type-aware grading).
-- `src/debate/pipeline.py` — the 5 debate stages.
-- `src/debate/schemas.py` — Pydantic structured-output schemas.
+- `src/debate/pipeline.py` — the 5 debate stages (all take/return Pydantic).
+- `src/debate/schemas.py` — Pydantic schemas: structured outputs +
+  `DebateResult`, `EvaluationRecord`, `RunMetrics`.
 - `src/debate/prompts.py` — prompt builders (incl. `build_grader_prompt`).
 - `src/debate/evaluation.py` — metrics (delegate to `Problem.check`).
 - `data/llm_hard_problems.json` — LLM-hard / human-easy problem set.
@@ -104,11 +114,41 @@ falls back to a string match.
   (number / multiple_choice / free_answer + LLM grader). See [`../notes.md`](../notes.md).
 - **Peer reviews are unstructured** — `generate_peer_reviews` uses `.generate()`
   (raw text) while every other stage is structured.
-- **Cleanups**: unused `pandas` dep; dead `OpenRouterClient.name` field; the
-  JSON-string passing smell (pipeline serializes objects to JSON strings and
-  re-parses them downstream).
+- ~~Dead `OpenRouterClient.name` field + sync `generate`/`generate_structured`~~
+  — removed; the client is async-only now and the grader wraps
+  `agenerate_structured` in `asyncio.run`.
+- ~~JSON-string passing smell~~ — fixed: pipeline stages now pass/return
+  Pydantic objects (`DebateResult` in `schemas.py`); serialization happens once
+  in `run_demo.py` via `model_dump()`.
 
 ## Recent changes
+- **2026-07-03** — Code review fixes: `GraderConfig` restores grader defaults
+  (temp 0.0 / gemini model) when `[grader]` is partial; grader results are
+  memoized (11 → 3 LLM calls per free-answer problem across metrics);
+  `judge_selected_correct_answer` reuses `evaluate_result`; plotter uses new
+  `load_run_config` (no full-config validation just to read `output_file`);
+  `OpenRouterClient` fields are required ([defaults] is the single source of
+  truth); `*.egg-info/` gitignored.
+- **2026-07-03** — Tooling: added `pyproject.toml` (project metadata + deps +
+  ruff config; replaces `requirements.txt`, drops unused `pandas`) and `ruff`
+  (lint + format, all clean). Package installs editable (`pip install -e .`),
+  so the `sys.path.insert("src")` hacks in both scripts are gone. Ruff caught
+  and fixed: unused imports, `zip()` without `strict=`, `Optional[X]` →
+  `X | None`, duplicated Field description (now `FINAL_ANSWER_DESCRIPTION`).
+- **2026-07-03** — Pydantic everywhere: `load_config` now returns a validated
+  `AppConfig` (`RunConfig`/`DefaultsConfig`/`SlotConfig` in `models.py`);
+  problems are `Problem` objects from load onward (pipeline + prompts take
+  `Problem`, not dicts); `evaluate_result` returns `EvaluationRecord` and run
+  metrics are a `RunMetrics` model (both in `schemas.py`). Also removed dead
+  code: sync `generate`/`generate_structured` (client is async-only; the
+  grader wraps `agenerate_structured` in `asyncio.run`) and the unused
+  `OpenRouterClient.name` field.
+- **2026-07-03** — Typed pipeline: every stage now takes/returns Pydantic
+  schema objects instead of JSON strings; new `DebateResult` model wraps a full
+  debate. `evaluation.py` reads typed attributes (dropped
+  `parse_json_response`/`extract_*` helpers); `run_demo.py` serializes once at
+  the output boundary. Also documented `collect_role_preferences` and renamed
+  its misleading `model_name` param to `slot_name`.
 - **2026-06-26** — Single-LLM baseline (`calculate_single_llm_accuracy`): grades
   each solver's independent pre-debate answer; reported next to system accuracy
   and plotted. On the 29 hard problems: 0.69 (debate) vs 0.57 (single LLM).

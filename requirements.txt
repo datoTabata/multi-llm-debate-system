@@ -1,5 +1,0 @@
-python-dotenv
-pandas
-matplotlib
-openrouter
-pydantic

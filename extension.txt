@@ -1,0 +1,65 @@
+
+                          ┌──────────────────────────┐       ┌──────────────────────┐
+Customer ─▶ Carrier ─SIP─▶│       WHIZIO             │       │       WIDGERA        │
+                          │                          │       │                      │
+                          │ inbound route:           │       │                      │
+                          │   2960960 → ext 150 ─────────┼─SIP──▶│  ext 150 = AI    │
+                          │                          │       │                      │
+                          │           ◀─ internal ◀──┼─SIP───│  escalation: dials   │
+                          │ (extension/queue)   call │       │  internal number     │
+                          │                          │       │                      │
+                          └──────────────────────────┘       └──────────────────────┘
+
+
+Whizio - ს მხარეს:
+
+პარამეტრები იგივე.
+
+ახალი extension თქვენს pbx ში - ვთქვათ ნომერი 150 ზე, დაცული username, pass. 
+
+შემომაავალი ზარები 2960960 გავუშვათ ამ  150 შიდა ნომერზე. თავიდან, თუ IVR მარტივად შეგიძლიათ, ღილაკ 9-დან გადავიდეს 150 ზე. 
+
+
+Widgera - ს მხარეს: 
+
+ვარეგისტრირებთ მაგ ნომერს username, pass ით. შემომავალ ზარებს უსმეს AI. 
+
+AI ამისამართებს სხვა შიდა ნომერზე.
+
+
+Whizio სთან დაახლოებით ასე გამოიყურება pbx ცვლილებები: 
+
+; ახალი extension — widgera-ai
+[150]
+type = endpoint
+auth = 150-auth              ; username/password, რომელსაც ჩვენ გადმოგვცემთ
+context = from-internal
+allow = alaw,ulaw
+; voicemail: გამორთული
+; ერთდროული ზარები: შეუზღუდავი (ან პიკის x2)
+
+; შემომავალი ზარების მიმართვა AI-სთან + failover
+[from-trunk]
+exten => 2960960,1,Dial(PJSIP/150,15)     ; ჯერ AI-ს ურეკავს, 15 წმ
+ same => n,Goto({SAME_AS_BEFORE},s,1)            ; არ უპასუხა → როგორც აქამდე
+
+(IVR-ის ვარიანტში 2960960 → IVR → ღილაკი 9 → Dial(PJSIP/150,15) — დანარჩენი იგივე.)
+
+
+Widgera -ს მხარეს ასე გამოიყურება pbx ცვლილებეი:
+
+; რეგისტრაცია — თქვენს სერვერზე ვდგებით როგორც 150
+[gorgia-registration]
+type = registration
+server_uri = sip:<თქვენი ჰოსტი>
+client_uri = sip:150@<თქვენი ჰოსტი>
+outbound_auth = gorgia-auth               ; თქვენი მოცემული username/pass
+
+; შემომავალი ზარი 150-ზე → AI პასუხობს
+[from-gorgia]
+exten => _X!,1,Dial(PJSIP/${EXTEN}@ai-platform)
+
+; ესკალაცია — AI აბრუნებს ზარს თქვენს შიდა ნომერზე
+[from-ai]
+exten => <შიდა ნომერი>,1,Dial(PJSIP/<შიდა ნომერი>@gorgia,60)
+

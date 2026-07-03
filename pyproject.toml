@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-llm-debate"
+version = "0.1.0"
+description = "Multi-LLM collaborative debate system: 3 solvers + peer review + refinement + 1 judge"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib",
+    "openrouter",
+    "pydantic>=2",
+    "python-dotenv",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "scripts"]
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes, I: import sorting, UP: modernize syntax,
+# B: bugbear (likely bugs), SIM: simplifications
+select = ["E", "W", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# matplotlib env vars (cache dir, headless backend) must be set BEFORE
+# importing matplotlib, so imports can't all sit at the top.
+"scripts/plot_metrics.py" = ["E402"]

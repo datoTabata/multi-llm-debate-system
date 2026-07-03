@@ -1,8 +1,10 @@
 from datetime import date
 
+from debate.problem import Problem
+
 
 def build_role_preference_prompt(
-    problem: dict,
+    problem: Problem,
     model_identity: str,
     peers: list[str] | None = None,
     today: str | None = None,
@@ -34,7 +36,7 @@ newer and more capable models may have been released since then that you are
 unaware of. Do not assume you are the newest or strongest model in the group.
 
 Problem:
-{problem["question"]}
+{problem.question}
 
 Reason about your own likely strengths and weaknesses as "{model_identity}" on
 this specific kind of problem, relative to the named peer models above, and
@@ -51,14 +53,14 @@ solver_confidence and judge_confidence must be numbers between 0 and 1.
 """
 
 
-def build_solver_prompt(problem: dict) -> str:
+def build_solver_prompt(problem: Problem) -> str:
     """Build a prompt for independent solution generation."""
 
     return f"""
 Solve the following problem independently.
 
 Problem:
-{problem["question"]}
+{problem.question}
 
 Return:
 - step-by-step reasoning
@@ -72,14 +74,14 @@ For example, use "4" instead of "The answer is 4."
 """
 
 
-def build_peer_review_prompt(problem: dict, solution_id: str, solution: str) -> str:
+def build_peer_review_prompt(problem: Problem, solution_id: str, solution: str) -> str:
     """Build a prompt for peer review."""
 
     return f"""
 Review the following solution.
 
 Problem:
-{problem["question"]}
+{problem.question}
 
 Solution ID:
 {solution_id}
@@ -96,7 +98,7 @@ Return:
 """
 
 
-def build_refinement_prompt(problem: dict, original_solution: str, reviews: list[str]) -> str:
+def build_refinement_prompt(problem: Problem, original_solution: str, reviews: list[str]) -> str:
     """Build a prompt for solution refinement."""
 
     joined_reviews = "\n\n".join(reviews)
@@ -105,7 +107,7 @@ def build_refinement_prompt(problem: dict, original_solution: str, reviews: list
 Refine your solution using the peer reviews.
 
 Problem:
-{problem["question"]}
+{problem.question}
 
 Original solution:
 {original_solution}
@@ -151,7 +153,7 @@ Return:
 
 
 def build_judge_prompt(
-    problem: dict,
+    problem: Problem,
     solutions: dict[str, str],
     peer_reviews: dict[str, list[str]],
     refined_solutions: dict[str, str],
@@ -162,7 +164,7 @@ def build_judge_prompt(
 Judge the final solutions.
 
 Problem:
-{problem["question"]}
+{problem.question}
 
 Original solutions:
 {solutions}
