@@ -22,7 +22,8 @@ LLM and majority-vote baselines on a 25-problem dataset. Full spec in
 | 3 | System metrics (accuracy, consensus, judge-acc, improvement) | ✅ done |
 | 3 | Type-aware answer checking (number / MC / free-answer + LLM grader) | ✅ done |
 | 3 | Single-LLM baseline (solo solver accuracy) | ✅ done |
-| 3 | Majority-vote baseline | ❌ missing |
+| 3 | Majority-vote baseline | ✅ done |
+| 3 | Notebooks (dataset / system / evaluation) | ✅ done |
 | 3 | Comparison plot (system vs single-LLM) | ✅ done |
 
 ## How it runs (no env vars)
@@ -112,9 +113,8 @@ falls back to a string match.
 - `scripts/plot_metrics.py` — plot generator (reads config `output_file`).
 
 ## Known issues / TODO
-- **Majority-vote baseline** still missing (single-LLM is done via
-  `calculate_single_llm_accuracy`). Computable from existing independent
-  solutions; no new debate calls needed.
+- ~~Majority-vote baseline missing~~ — done: `calculate_majority_vote_accuracy`
+  in `evaluation.py` (plurality of the 3 independent answers; no new calls).
 - **Brittle number grading** — e.g. `hard_029` model answered "0.1-0.2 m (or ~0
   m theoretically)"; `_to_number` grabbed 0.1 and marked it wrong. Hedged ranges
   on number-type problems can misgrade.
@@ -130,6 +130,21 @@ falls back to a string match.
   in `run_demo.py` via `model_dump()`.
 
 ## Recent changes
+- **2026-07-03** — Batch orchestration moved into the package
+  (`src/debate/runner.py`: `load_problems`, `select_problems`,
+  `run_all_debates`, `compute_metrics`, `run_and_evaluate`, `save_output`);
+  `scripts/run_demo.py` is now a thin CLI over it. Notebooks run the **entire
+  system from cells** (import the package; no script invocation needed) and
+  exercise every function — `assign_roles`, the grader, `run_all_debates`
+  (concurrency), all metric functions via `compute_metrics`, and dashboard
+  generation. Live cells gated behind `RUN_LIVE` (off by default).
+- **2026-07-03** — Notebooks + majority-vote baseline (assignment deliverables):
+  added `calculate_majority_vote_accuracy` (the required Simple Voting baseline)
+  to `evaluation.py`, wired into `RunMetrics`/`run_demo`/dashboard. On the 29
+  hard problems: debate **0.69** > single-LLM **0.56** > majority-vote **0.48**.
+  Three notebooks under `notebooks/` (dataset / debate system / evaluation)
+  orchestrate the package; NB1 and NB3 run without an API key. Enriched the
+  saved `outputs/hard_result.json` metrics with `majority_vote_accuracy`.
 - **2026-07-03** — HTML results dashboard (`scripts/build_dashboard.py`):
   renders a run into `outputs/<run>_dashboard.html` (headline, metric tiles,
   per-problem grid, and a drill-down of one problem's full pipeline — role

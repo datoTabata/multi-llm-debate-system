@@ -90,27 +90,51 @@ Grading logic lives in `Problem.check()` (`src/debate/problem.py`).
 - **accuracy** — debate-system accuracy (the judge's chosen answer).
 - **single_llm_accuracy** — baseline: each Solver's independent, pre-debate
   answer, averaged (no extra API calls).
+- **majority_vote_accuracy** — baseline: the plurality of the three Solvers'
+  independent answers (simple voting; no refinement, no judge).
 - **consensus_rate** — how often all three Solvers agree after refinement.
 - **judge_accuracy_on_disagreements** — how often the Judge picks a correct
   answer when the Solvers disagree.
 - **improvement_rate** — how often refinement turned a wrong answer right.
+
+## Notebooks
+
+The three notebooks under `notebooks/` walk through the project phase by phase
+and orchestrate the `debate` package (no copied logic). They come with outputs
+saved; notebooks 1 and 3 re-run without an API key (they read the saved run),
+and notebook 2's optional live-debate cell activates only if `OPEN_ROUTER_KEY`
+is set.
+
+```text
+notebooks/01_dataset.ipynb         Phase 1 — the datasets, categories, grading
+notebooks/02_debate_system.ipynb   Phase 2 — one problem through all five stages
+notebooks/03_evaluation.ipynb      Phase 3 — metrics + the three baselines + plots
+```
+
+```bash
+jupyter lab   # open and re-run any notebook
+```
 
 ## Project structure
 
 ```text
 config/models.toml        models + run settings + grader (single config source)
 data/                     problems.json, llm_hard_problems.json
+notebooks/                phase-by-phase walkthrough (see above)
 src/debate/
   models.py               OpenRouterClient (async), typed config, grader factory
   problem.py              Problem model + check() (type-aware grading)
   pipeline.py             the five debate stages
+  runner.py               batch orchestration (select/run/evaluate) — used by
+                          both run_demo and the notebooks
   schemas.py              Pydantic schemas (structured outputs + result/metrics)
   prompts.py              prompt builders
-  evaluation.py           metrics
+  evaluation.py           metrics + the three baselines
 scripts/
-  run_demo.py             async end-to-end runner
+  run_demo.py             thin CLI over debate.runner (also writes the dashboard)
+  build_dashboard.py      HTML results dashboard generator
   plot_metrics.py         metrics plot
-outputs/                  generated results + plots (gitignored)
+outputs/                  generated results, plots, dashboards
 pyproject.toml            package metadata, dependencies, ruff config
 ```
 
