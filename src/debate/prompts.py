@@ -137,6 +137,12 @@ You are grading an answer to a problem. Decide whether the predicted answer is
 correct, i.e. semantically equivalent to the reference answer. Ignore wording,
 formatting, capitalization, and ordering differences — judge only the meaning.
 
+The reference answer is GROUND TRUTH. Do not re-solve the problem or
+second-guess the reference, even if you believe it is wrong — many problems
+here are deliberate traps where the intuitive answer is incorrect. A predicted
+answer that is shorter or less detailed than the reference is still correct as
+long as it agrees with the reference's core claim.
+
 Problem:
 {question}
 
